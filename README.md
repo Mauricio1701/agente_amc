@@ -1,25 +1,23 @@
-### Configurar el entorno virtual
+# Configurar el entorno virtual
 
-# En Windows
+### En Windows
 python -m venv venv
 venv\Scripts\activate
 
-# Instalar requerimientos
+### Instalar requerimientos
 pip install -r requirements.txt
 
-### Configurar el archivo .env (credenciales)
+# Configurar el archivo .env (credenciales)
 
-# API Keys
+
 DEEPSEEK_API_KEY=tu_api_key_aqui
 
-# Base de datos
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=tuusuario
 MYSQL_PASSWORD=tupassword
 MYSQL_DATABASE=nombre_base_datos
 
-# Configuración de Amazon AMC
 AMAZON_AMC_CLIENT_ID=tu_client_id
 AMAZON_AMC_CLIENT_SECRET=tu_client_secret
 AMAZON_AMC_ACCESS_TOKEN=tu_access_token
@@ -29,8 +27,8 @@ AMAZON_AMC_ADVERTISER_ID=tu_advertiser_id
 AMAZON_AMC_MARKETPLACE_ID=tu_marketplace_id
 
 
-### Ejecutar la aplicación
+# Ejecutar la aplicación
 
-# Activar el entorno virtual primero
+### Activar el entorno virtual primero
 .venv\Scripts\activate
 flask run
