@@ -418,22 +418,89 @@ class DeepSeekClient:
             return False
         return True
 
-    def analyze_with_context(self, prompt: str, file_content: str = "", context_type: str = "auto", history: List[Dict] = None) -> str:
-        system_prompt = (
-            "Eres un asistente analítico y conversacional especializado en Amazon Marketing Cloud (AMC). "
-            "Dirígete al usuario como Raúl y usa un tono cálido y natural, como si hablaras con un amigo. "
-            "Evita usar listas numeradas, asteriscos o guiones para estructurar tus respuestas; escribe en párrafos simples. "
-            "Proporciona respuestas precisas y útiles basadas en el contexto proporcionado."
-        )
-        if context_type == "auto":
-            if "código" in prompt.lower() or any(ext in file_content.lower() for ext in [".py", ".java", ".cpp"]):
-                system_prompt += " Especialízate en análisis de código y programación."
-            elif file_content:
-                system_prompt += " Analiza el contenido del archivo proporcionado junto con la consulta del usuario."
-        if file_content:
-            system_prompt += f"\n\nContenido del archivo:\n{file_content[:5000]}..."
-        return self.chat(prompt, system=system_prompt, use_file_context=True, history=history)
-
+    def _get_completion(self, prompt: str) -> str:
+        """Obtiene una respuesta del modelo para el prompt dado."""
+        try:
+            # Preparar el sistema de mensajes
+            system_message = (
+                "Eres un asistente experto en Amazon Marketing Cloud (AMC). "
+                "Tu tarea es proporcionar respuestas útiles y detalladas a consultas sobre análisis de datos, "
+                "informes, métricas y optimización de campañas publicitarias en Amazon. "
+                "Si te presentan un archivo, analiza su contenido cuidadosamente y responde basándote en él."
+            )
+            
+            # Preparar la conversación con el contexto adecuado
+            messages = [("system", system_message)]
+            
+            # Añadir contexto previo si existe
+            if hasattr(self, 'conversation_context') and self.conversation_context:
+                # Limitar a los últimos 5 mensajes para mantener el contexto reciente
+                for message in self.conversation_context[-10:]:
+                    role = "human" if message["role"] == "user" else "assistant"
+                    messages.append((role, message["content"]))
+            
+            # Añadir el prompt actual
+            messages.append(("human", prompt))
+            
+            # Llamar al modelo LLM
+            logger.info(f"Enviando prompt al modelo, longitud total: {sum(len(m[1]) for m in messages)} caracteres")
+            response = self.llm.invoke(messages)
+            
+            # Extraer y limpiar la respuesta
+            answer = response.content if hasattr(response, "content") else str(response)
+            answer = self._clean_response(answer)
+            
+            # Actualizar el contexto de la conversación
+            self.conversation_context.append({"role": "user", "content": prompt})
+            self.conversation_context.append({"role": "assistant", "content": answer})
+            
+            # Limitar el tamaño del contexto para evitar tokens excesivos
+            if len(self.conversation_context) > 20:
+                self.conversation_context = self.conversation_context[-20:]
+                
+            return answer
+        except Exception as e:
+            logger.error(f"Error en _get_completion: {str(e)}")
+            return f"Lo siento, ocurrió un error al procesar tu consulta: {str(e)}"
+    
+    def analyze_with_context(self, query, file_content="", context_type="auto"):
+        """Analiza una consulta con contexto opcional."""
+        try:
+            # Log para diagnóstico
+            logger.info(f"analyze_with_context llamado con query de {len(query)} caracteres y file_content de {len(file_content)} caracteres")
+            
+            # Si hay contenido de archivo, crear un prompt enriquecido
+            enriched_query = query
+            if file_content and len(file_content) > 0:
+                # Limitar el contenido del archivo si es muy grande
+                if len(file_content) > 15000:  # Limitar a 15k caracteres
+                    file_content = file_content[:15000] + "...\n[Contenido truncado debido a su tamaño]"
+                
+                enriched_query = f"Basándote en el siguiente contenido de archivo, responde a esta pregunta: '{query}'\n\nContenido del archivo:\n{file_content}"
+                logger.info(f"Consulta enriquecida con contenido de archivo, longitud final: {len(enriched_query)} caracteres")
+            
+            # Preparar y enviar al modelo
+            response = self._get_completion(enriched_query)
+            
+            # Guardar en el historial de chat
+            if hasattr(self, 'chat_history') and self.chat_history:
+                # Verificar que el chat_history tenga un session_id configurado
+                if self.chat_history.session_id:
+                    self.chat_history.add_message(query, response)
+                else:
+                    logger.warning("No hay session_id configurado en chat_history")
+            
+            # Extraer conocimiento de la interacción
+            try:
+                self._extract_knowledge(query, response)
+            except Exception as e:
+                logger.error(f"Error extrayendo conocimiento: {str(e)}")
+            
+            return response
+        except Exception as e:
+            logger.error(f"Error en analyze_with_context: {str(e)}")
+            return f"Lo siento, ocurrió un error al procesar tu consulta: {str(e)}"
+        
     def _extract_knowledge(self, prompt: str, response: str):
         try:
             # Sólo extraer conocimiento de respuestas significativas (más de 50 caracteres)

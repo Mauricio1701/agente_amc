@@ -30,38 +30,43 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    query = request.form.get('query', '')
-    if not query:
-        return jsonify({'error': 'No se proporcionó consulta'}), 400
-    
     try:
-        response = process_query(query)
+        query = request.form.get('query', '')
+        if not query:
+            return jsonify({'error': 'No se proporcionó consulta'}), 400
+        
+        file_content = ""
+        # Manejar archivo adjunto si existe
+        if 'file' in request.files and request.files['file'].filename:
+            file = request.files['file']
+            app.logger.info(f"Archivo recibido: {file.filename}")
+            
+            try:
+                # Procesar el contenido del archivo utilizando la función process_file
+                from core.file_processor import process_file
+                file_content = process_file(file)
+                app.logger.info(f"Archivo procesado. Longitud del contenido: {len(file_content)}")
+            except Exception as e:
+                app.logger.error(f"Error procesando archivo: {str(e)}")
+                file_content = f"[No se pudo procesar completamente el archivo: {file.filename}. Error: {str(e)}]"
+        
+        # Añadir mensaje para verificar si se está procesando el archivo
+        prompt = query
+        if file_content:
+            prompt = f"Basándote en el siguiente contenido de archivo, responde a esta pregunta: '{query}'\n\nContenido del archivo:\n{file_content}"
+        
+        app.logger.info(f"Enviando prompt a DeepSeek con contenido de archivo: {len(file_content) > 0}")
+        response = deepseek_client.analyze_with_context(prompt, file_content=file_content)
         
         # Guardar explícitamente la conversación en el historial
         if not deepseek_client.chat_history.add_message(query, response):
             app.logger.warning("No se pudo guardar la conversación en el historial")
         
         return jsonify({'response': response})
+        
     except Exception as e:
         app.logger.error(f"Error en proceso de chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-@app.route('/reports/delete', methods=['POST'])
-def delete_report():
-    file_id = request.form.get('file_id')
-    if not file_id:
-        flash('No se proporcionó ID de archivo', 'warning')
-        return redirect(url_for('reports'))
-    
-    try:
-        if db.delete_file(file_id):
-            flash('Reporte eliminado con éxito', 'success')
-        else:
-            flash('No se pudo eliminar el reporte', 'danger')
-    except Exception as e:
-        flash(f'Error al eliminar reporte: {str(e)}', 'danger')
-    
-    return redirect(url_for('reports'))
 
 # Modificar la ruta reports() para incluir la fecha actual
 @app.route('/reports')

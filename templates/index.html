@@ -357,6 +357,61 @@
         padding: 0.2em 0.4em;
         border-radius: 3px;
     }
+
+    /* Añadir a la sección de estilos */
+    .btn-upload-file {
+        background: none;
+        border: none;
+        color: var(--muted-text);
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn-upload-file:hover {
+        color: var(--text-color);
+    }
+
+    .btn-upload-file i {
+        margin-right: 0.25rem;
+    }
+
+    .file-upload-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.3rem 0.6rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-color);
+    }
+
+    .file-upload-badge i {
+        margin-right: 0.4rem;
+        color: var(--accent-color);
+    }
+
+    .file-upload-badge .remove-file {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        color: var(--muted-text);
+    }
+
+    .file-upload-badge .remove-file:hover {
+        color: #dc3545;
+    }
+
+    .uploaded-file-container {
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--secondary-bg);
+    }
 </style>
 
 {% endblock %}
@@ -371,6 +426,10 @@
                 <div class="header-subtitle">Te ayudaré a analizar tus datos de AMC</div>
             </div>
             <div class="chat-header-actions">
+                <label for="fileUpload" class="btn-upload-file" title="Subir archivo">
+                    <i class="bi bi-file-earmark-plus"></i> Archivo
+                </label>
+                <input type="file" id="fileUpload" class="file-upload-input" style="display: none;">
                 <button class="btn-clear-chat" id="clearChatBtn" title="Limpiar chat">
                     <i class="bi bi-trash"></i> Limpiar
                 </button>
@@ -599,6 +658,7 @@
         });
 
         // Función para enviar mensaje
+        // Modificar la función sendMessage para incluir el archivo
         function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -615,22 +675,37 @@
             userInput.value = '';
             userInput.style.height = 'auto';
             sendButton.disabled = true;
-            charCount.textContent = '0/2000';
+            charCount.textContent = '0/4000';
 
             // Mostrar indicador de carga
             const loadingId = showLoading();
 
+            // Crear FormData para enviar mensaje y archivo
+            const formData = new FormData();
+            formData.append('query', message);
+
+            // Agregar archivo si existe
+            if (uploadedFile) {
+                formData.append('file', uploadedFile);
+                // Añadir indicador de que se está procesando archivo
+                const processingMsg = document.createElement('div');
+                processingMsg.className = 'message-row system-message';
+                processingMsg.innerHTML = `<div class="message-content"><i class="bi bi-file-earmark-text"></i> Procesando archivo: ${uploadedFile.name}...</div>`;
+                chatMessages.appendChild(processingMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
             // Enviar consulta al servidor
             fetch('/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'query': message
-                })
+                body: formData
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     // Ocultar indicador de carga
                     hideLoading(loadingId);
@@ -639,6 +714,23 @@
                         appendMessage('system', `Error: ${data.error}`);
                     } else {
                         appendMessage('ai', data.response);
+                    }
+
+                    // Si se envió un archivo, eliminar su referencia
+                    if (uploadedFile) {
+                        // Eliminar mensaje de procesamiento si existe
+                        const processingMsg = document.querySelector('.system-message');
+                        if (processingMsg) {
+                            processingMsg.remove();
+                        }
+
+                        uploadedFile = null;
+                        // Eliminar el indicador de archivo si existe
+                        const fileContainer = document.querySelector('.uploaded-file-container');
+                        if (fileContainer) {
+                            fileContainer.remove();
+                        }
+                        fileUpload.value = '';
                     }
 
                     // Enfocar el input para continuar la conversación
@@ -770,5 +862,102 @@
         // Enfocar el input al cargar la página
         userInput.focus();
     });
+
+    // Añadir esto dentro del script existente en document.addEventListener
+    const fileUpload = document.getElementById('fileUpload');
+    let uploadedFile = null;
+
+    // Manejar la carga de archivos
+    fileUpload.addEventListener('change', function (e) {
+        if (this.files && this.files[0]) {
+            uploadedFile = this.files[0];
+
+            // Mostrar indicador de archivo cargado
+            const uploadedFileContainer = document.createElement('div');
+            uploadedFileContainer.className = 'uploaded-file-container';
+            uploadedFileContainer.innerHTML = `
+            <div class="file-upload-badge">
+                <i class="bi bi-file-earmark-text"></i>
+                ${uploadedFile.name}
+                <span class="remove-file" title="Eliminar archivo"><i class="bi bi-x"></i></span>
+            </div>`;
+
+            // Insertar antes de los mensajes
+            chatMessages.insertBefore(uploadedFileContainer, chatMessages.firstChild);
+
+            // Permitir eliminar el archivo
+            uploadedFileContainer.querySelector('.remove-file').addEventListener('click', function () {
+                uploadedFileContainer.remove();
+                uploadedFile = null;
+                fileUpload.value = '';
+            });
+        }
+    });
+
+    // Modificar la función sendMessage para incluir el archivo
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Si es primer mensaje, limpiar el contenido de bienvenida
+        if (document.querySelector('.welcome-container')) {
+            chatMessages.innerHTML = '';
+        }
+
+        // Añadir mensaje del usuario a la UI
+        appendMessage('user', message);
+
+        // Limpiar y resetear input
+        userInput.value = '';
+        userInput.style.height = 'auto';
+        sendButton.disabled = true;
+        charCount.textContent = '0/2000';
+
+        // Mostrar indicador de carga
+        const loadingId = showLoading();
+
+        // Crear FormData para enviar mensaje y archivo
+        const formData = new FormData();
+        formData.append('query', message);
+
+        if (uploadedFile) {
+            formData.append('file', uploadedFile);
+        }
+
+        // Enviar consulta al servidor
+        fetch('/chat', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Ocultar indicador de carga
+                hideLoading(loadingId);
+
+                if (data.error) {
+                    appendMessage('system', `Error: ${data.error}`);
+                } else {
+                    appendMessage('ai', data.response);
+                }
+
+                // Si se envió un archivo, eliminar su referencia
+                if (uploadedFile) {
+                    uploadedFile = null;
+                    // Eliminar el indicador de archivo si existe
+                    const fileContainer = document.querySelector('.uploaded-file-container');
+                    if (fileContainer) {
+                        fileContainer.remove();
+                    }
+                }
+
+                // Enfocar el input para continuar la conversación
+                userInput.focus();
+            })
+            .catch(error => {
+                hideLoading(loadingId);
+                appendMessage('system', `Error de conexión: ${error.message}`);
+                userInput.focus();
+            });
+    }
 </script>
 {% endblock %}

@@ -324,12 +324,7 @@
                                         <a href="{{ url_for('view_report', file_id=report.file_id) }}" class="btn-action-sm btn-view" title="Ver Reporte">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <button type="button" class="btn-action-sm btn-delete delete-report" 
-                                               data-file-id="{{ report.file_id }}" 
-                                               data-file-name="{{ report.file_name }}"
-                                               title="Eliminar Reporte">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        
                                     </div>
                                 </td>
                             </tr>
@@ -369,10 +364,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-modal btn-cancel" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="POST" action="{{ url_for('delete_report') }}">
-                    <input type="hidden" id="reportId" name="file_id">
-                    <button type="submit" class="btn-modal btn-danger">Eliminar</button>
-                </form>
+                
             </div>
         </div>
     </div>
@@ -382,7 +374,6 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const deleteButtons = document.querySelectorAll('.delete-report');
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         const reportNameElement = document.getElementById('reportName');
         const reportIdInput = document.getElementById('reportId');

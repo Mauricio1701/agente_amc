@@ -376,9 +376,7 @@
                         <i class="bi bi-clipboard"></i>Copiar al portapapeles
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item text-danger" href="#" onclick="showDeleteModal()">
-                        <i class="bi bi-trash"></i>Eliminar reporte
-                    </a>
+                    
                 </div>
             </div>
         </div>
@@ -520,31 +518,6 @@
     </div>
 </div>
 
-<!-- Modal para confirmar eliminación -->
-<div class="modal fade" id="deleteReportModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: #dc3545;"></i>
-                </div>
-                <p>¿Estás seguro que deseas eliminar el reporte <strong>{{ report.file_name }}</strong>?</p>
-                <p style="color: #dc3545;">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-action btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                <form action="{{ url_for('delete_report') }}" method="POST">
-                    <input type="hidden" name="file_id" value="{{ report.file_id }}">
-                    <button type="submit" class="btn-action" style="background-color: #dc3545;">Eliminar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -568,11 +541,7 @@
             }
         });
         
-        // Modal de eliminación
-        window.showDeleteModal = function() {
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteReportModal'));
-            deleteModal.show();
-        }
+
         
         // Descargar como CSV
         document.getElementById('downloadCsv').addEventListener('click', function(e) {
