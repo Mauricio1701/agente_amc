@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Amazon AMC Assistant - Memoria del Sistema{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contenedor principal */
+    .content-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--secondary-bg);
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+    
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-container h3 {
+        color: var(--text-color);
+        font-weight: 500;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .header-container h3 i {
+        color: var(--accent-color);
+        margin-right: 0.5rem;
+    }
+    
+    .header-description {
+        color: var(--muted-text);
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    /* Tarjetas de memoria */
+    .memory-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .memory-card {
+        background-color: var(--content-bg);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .memory-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .memory-card-header {
+        background-color: var(--primary-bg);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .memory-topic {
+        color: var(--accent-color);
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 500;
+    }
+    
+    .memory-source {
+        color: var(--muted-text);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    .memory-content {
+        padding: 1rem;
+    }
+    
+    .memory-facts {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .memory-fact {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+        color: var(--text-color);
+    }
+    
+    .memory-fact:last-child {
+        border-bottom: none;
+    }
+    
+    .memory-footer {
+        background-color: var(--primary-bg);
+        padding: 0.75rem 1rem;
+        font-size: 0.75rem;
+        color: var(--muted-text);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Estado vacío */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background-color: var(--content-bg);
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--muted-text);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-title {
+        color: var(--text-color);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-description {
+        color: var(--muted-text);
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+    }
+    
+    /* Acción de limpieza */
+    .action-card {
+        background-color: var(--content-bg);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        margin-top: 1.5rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--content-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h5 {
+        color: var(--text-color);
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .action-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        background-color: var(--secondary-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+    }
+    
+    .action-button:hover {
+        background-color: var(--hover-bg);
+    }
+    
+    .action-button.danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    
+    .action-button.danger:hover {
+        background-color: #dc3545;
+        color: var(--primary-bg);
+    }
+    
+    .action-button i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Modal personalizado */
+    .modal-content {
+        background-color: var(--content-bg);
+        border-color: var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.5rem;
+    }
+    
+    .modal-header {
+        border-bottom-color: var(--border-color);
+        padding: 1rem;
+        background-color: var(--primary-bg);
+    }
+    
+    .modal-title {
+        color: var(--text-color);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .warning-icon {
+        color: #ffc107;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .modal-footer {
+        border-top-color: var(--border-color);
+        padding: 1rem;
+        background-color: var(--primary-bg);
+    }
+    
+    .btn-outline-secondary {
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: var(--hover-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    
+    .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    
+    /* Animación del modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: scale(0.9);
+    }
+    
+    .modal.show .modal-dialog {
+        transform: scale(1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <div class="header-container">
+        <div>
+            <h3><i class="bi bi-database"></i> Memoria del Sistema</h3>
+            <p class="header-description">Información almacenada en la base de conocimientos del asistente</p>
+        </div>
+    </div>
+    
+    {% if knowledge %}
+    <div class="memory-cards">
+        {% for item in knowledge %}
+        <div class="memory-card">
+            <div class="memory-card-header">
+                <h5 class="memory-topic">{{ item.topic }}</h5>
+                <div class="memory-source">
+                    <i class="bi bi-info-circle"></i> Fuente: {{ item.source }}
+                </div>
+            </div>
+            <div class="memory-content">
+                <ul class="memory-facts">
+                    {% for fact in item.facts %}
+                    <li class="memory-fact">{{ fact }}</li>
+                    {% else %}
+                    <li class="memory-fact">Sin datos</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="memory-footer">
+                <i class="bi bi-clock"></i> Último acceso: 
+                {% if item.last_accessed is defined %}
+                    {% if item.last_accessed is string %}
+                        {{ item.last_accessed }}
+                    {% else %}
+                        {{ item.last_accessed.strftime('%Y-%m-%d %H:%M:%S') }}
+                    {% endif %}
+                {% else %}
+                    Desconocido
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-database-slash empty-icon"></i>
+        <h4 class="empty-title">No hay datos en memoria</h4>
+        <p class="empty-description">La base de conocimientos está vacía. El asistente irá guardando información relevante a medida que interactúes con él.</p>
+    </div>
+    {% endif %}
+    
+    <div class="action-card">
+        <div class="card-header">
+            <h5>Acciones</h5>
+        </div>
+        <div class="card-body">
+            <button type="button" class="action-button danger" id="clearMemoryBtn">
+                <i class="bi bi-trash"></i> Limpiar Memoria del Sistema
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar limpieza de memoria -->
+<div class="modal fade" id="clearMemoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-exclamation-triangle warning-icon"></i>
+                <p>¿Estás seguro que deseas eliminar toda la memoria del sistema?</p>
+                <p style="color: #dc3545;">Esta acción no se puede deshacer y podría afectar el rendimiento del asistente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="confirmClearMemoryBtn" class="btn btn-danger">Eliminar Memoria</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar el modal
+        const clearMemoryModal = new bootstrap.Modal(document.getElementById('clearMemoryModal'));
+        const clearMemoryBtn = document.getElementById('clearMemoryBtn');
+        const confirmClearMemoryBtn = document.getElementById('confirmClearMemoryBtn');
+        
+        // Mostrar modal al hacer clic en el botón de limpiar
+        clearMemoryBtn.addEventListener('click', function() {
+            clearMemoryModal.show();
+        });
+        
+        // Acción para confirmar la limpieza de memoria
+        confirmClearMemoryBtn.addEventListener('click', function() {
+            fetch('/memory/clear', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearMemoryModal.hide();
+                
+                if (data.success) {
+                    // Recargar la página para mostrar el estado actualizado
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.error || 'No se pudo limpiar la memoria');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                clearMemoryModal.hide();
+                alert('Error de conexión al intentar limpiar la memoria');
+            });
+        });
+    });
+</script>
+{% endblock %}

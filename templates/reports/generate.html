@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+
+{% block title %}Generar Reporte AMC{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contenedor principal */
+    .content-container {
+        flex: 1;
+        overflow-y: auto;
+        background-color: var(--secondary-bg);
+        padding: 1.5rem;
+    }
+    
+    /* Estilos para el generador de reportes */
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--border-color);
+        z-index: 0;
+    }
+    
+    .step {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        width: 33%;
+    }
+    
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: var(--content-bg);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 20px;
+        color: var(--muted-text);
+        transition: all 0.3s;
+    }
+    
+    .step.active .step-icon {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: var(--primary-bg);
+    }
+    
+    .step.completed .step-icon {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: var(--primary-bg);
+    }
+    
+    .step-label {
+        color: var(--text-color);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .code-editor {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.9rem;
+        padding: 10px;
+        background-color: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-color);
+    }
+    
+    /* Card para el contenido principal */
+    .content-card {
+        background-color: var(--content-bg);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Formularios */
+    .form-label {
+        color: var(--text-color);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control {
+        background-color: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus {
+        background-color: var(--primary-bg);
+        border-color: var(--accent-color);
+        color: var(--text-color);
+        box-shadow: 0 0 0 0.25rem rgba(101, 182, 250, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: var(--secondary-bg);
+        border-color: var(--border-color);
+        color: var(--muted-text);
+    }
+    
+    .form-check-input {
+        background-color: var(--primary-bg);
+        border-color: var(--border-color);
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+    
+    .form-check-label {
+        color: var(--text-color);
+    }
+    
+    /* Botones */
+    .btn-primary {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: var(--primary-bg);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-color-dark);
+        border-color: var(--primary-color-dark);
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #218838;
+    }
+    
+    .btn-outline-secondary {
+        background-color: transparent;
+        border-color: var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: var(--hover-bg);
+        color: var(--text-color);
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Modal */
+    .modal-content {
+        background-color: var(--content-bg);
+        border-color: var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.75rem;
+    }
+    
+    .modal-header {
+        border-bottom-color: var(--border-color);
+        padding: 1rem;
+    }
+    
+    .modal-title {
+        color: var(--text-color);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .btn-close {
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+    
+    .btn-close:hover {
+        opacity: 1;
+    }
+    
+    /* Lista de ejemplos */
+    .list-group-item {
+        background-color: var(--content-bg);
+        border-color: var(--border-color);
+        color: var(--text-color);
+        transition: all 0.2s;
+    }
+    
+    .list-group-item:hover {
+        background-color: var(--hover-bg);
+    }
+    
+    .list-group-item.list-group-item-action:active {
+        background-color: var(--hover-bg);
+        color: var(--text-color);
+    }
+    
+    .list-group-item h6 {
+        color: var(--text-color);
+    }
+    
+    .list-group-item small {
+        color: var(--accent-color);
+    }
+    
+    .list-group-item p {
+        color: var(--muted-text);
+    }
+    
+    /* Spinner */
+    .spinner-border {
+        color: var(--accent-color);
+    }
+    
+    /* Alert */
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.15);
+        border-color: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+        border-radius: 0.5rem;
+    }
+    
+    .alert-success {
+        background-color: rgba(40, 167, 69, 0.15);
+        border-color: rgba(40, 167, 69, 0.3);
+        color: #28a745;
+        border-radius: 0.5rem;
+    }
+    
+    .alert-warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.3);
+        color: #ffc107;
+        border-radius: 0.5rem;
+    }
+    
+    /* Tarjeta de resultado */
+    .card-header {
+        padding: 1rem;
+        background-color: var(--content-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    hr {
+        border-color: var(--border-color);
+        margin: 1.5rem 0;
+        opacity: 0.25;
+    }
+    
+    /* Utilidades */
+    .mb-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+    
+    .me-1 {
+        margin-right: 0.25rem;
+    }
+    
+    .me-2 {
+        margin-right: 0.5rem;
+    }
+    
+    .d-flex {
+        display: flex;
+    }
+    
+    .justify-content-between {
+        justify-content: space-between;
+    }
+    
+    .text-muted {
+        color: var(--muted-text) !important;
+    }
+    
+    .d-none {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Contenedor principal -->
+<div class="content-container">
+    <div class="mb-4">
+        <h3 style="color: var(--text-color);">Generar Nuevo Reporte AMC</h3>
+        <p class="text-muted">Siga los pasos para crear un reporte personalizado de Amazon Marketing Cloud</p>
+    </div>
+
+    <div class="content-card">
+        <div class="card-body">
+            <!-- Indicador de pasos -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-icon">
+                        <i class="bi bi-pencil"></i>
+                    </div>
+                    <div class="step-label">Solicitud</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-icon">
+                        <i class="bi bi-code-square"></i>
+                    </div>
+                    <div class="step-label">SQL</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-icon">
+                        <i class="bi bi-table"></i>
+                    </div>
+                    <div class="step-label">Reporte</div>
+                </div>
+            </div>
+            
+            <!-- Formulario de generación de reportes -->
+            <div id="report-forms">
+                <!-- Paso 1: Solicitud natural -->
+                <div id="step1-form">
+                    <div class="mb-3">
+                        <label for="natural-request" class="form-label">Describe el reporte que deseas (en lenguaje natural):</label>
+                        <textarea id="natural-request" class="form-control" rows="4" placeholder="Ejemplo: 'Reporte de ventas por campaña en los últimos 30 días agrupado por ASIN'"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="button" id="request-examples-btn" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-lightbulb me-1"></i>Ver ejemplos
+                            </button>
+                        </div>
+                        <button type="button" id="improve-prompt-btn" class="btn btn-primary">
+                            <i class="bi bi-magic me-2"></i>Mejorar Prompt
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Paso 2: SQL -->
+                <div id="step2-form" style="display: none;">
+                    <div class="mb-3">
+                        <label for="improved-prompt" class="form-label">Prompt Mejorado:</label>
+                        <textarea id="improved-prompt" class="form-control code-editor" rows="3" readonly></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sql-query" class="form-label">Consulta AMC-SQL:</label>
+                        <textarea id="sql-query" class="form-control code-editor" rows="6"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" id="back-to-step1-btn" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Atrás
+                        </button>
+                        <button type="button" id="generate-sql-btn" class="btn btn-primary">
+                            <i class="bi bi-code-slash me-2"></i>Generar SQL
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Paso 3: Reporte -->
+                <div id="step3-form" style="display: none;">
+                    <div class="mb-3">
+                        <label for="instance-id" class="form-label">Instance ID:</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                            <input type="text" id="instance-id" class="form-control" value="amc088a9col">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirm-sql" checked>
+                            <label class="form-check-label" for="confirm-sql">
+                                He revisado la consulta SQL y confirmo que es correcta
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" id="back-to-step2-btn" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Atrás
+                        </button>
+                        <button type="button" id="create-report-btn" class="btn btn-success">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Crear Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado del reporte -->
+    <div id="report-result" class="d-none">
+        <div class="content-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Reporte Generado Exitosamente</h5>
+            </div>
+            <div class="card-body">
+                <div id="result-summary" class="mb-3">
+                    <!-- Resumen del reporte se insertará aquí -->
+                </div>
+                
+                <div id="download-links" class="mb-3">
+                    <!-- Enlaces de descarga se insertarán aquí -->
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between">
+                    <button type="button" id="new-report-btn" class="btn btn-outline-secondary">
+                        <i class="bi bi-plus-circle me-2"></i>Nuevo Reporte
+                    </button>
+                    <a href="{{ url_for('reports') }}" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-text me-2"></i>Ver Todos los Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error del reporte -->
+    <div id="report-error" class="d-none">
+        <div class="alert alert-danger">
+            <h5><i class="bi bi-exclamation-triangle me-2"></i>Error al Generar el Reporte</h5>
+            <hr style="border-color: rgba(220, 53, 69, 0.3); opacity: 0.5;">
+            <p id="error-message"></p>
+            <div class="mt-3">
+                <button type="button" id="retry-btn" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ejemplos de solicitudes -->
+<div class="modal fade" id="examplesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ejemplos de Solicitudes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action example-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Reporte de ventas por campaña</h6>
+                            <small>Básico</small>
+                        </div>
+                        <p class="mb-1">Reporte de ventas totales por campaña en los últimos 30 días</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action example-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Rendimiento de ASIN por región</h6>
+                            <small>Intermedio</small>
+                        </div>
+                        <p class="mb-1">Reporte de rendimiento de los top 10 ASINs por región, mostrando clicks, impresiones y conversiones</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action example-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Tendencias de rendimiento</h6>
+                            <small>Avanzado</small>
+                        </div>
+                        <p class="mb-1">Análisis de tendencias de conversiones por día de la semana agrupadas por categoría de producto en el trimestre actual</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de carga -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+                <h5 id="loading-message" style="color: var(--text-color);">Procesando su solicitud...</h5>
+                <p class="text-muted" id="loading-details">Esto puede tomar unos momentos</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos del DOM
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const step1Form = document.getElementById('step1-form');
+        const step2Form = document.getElementById('step2-form');
+        const step3Form = document.getElementById('step3-form');
+        
+        const improvePromptBtn = document.getElementById('improve-prompt-btn');
+        const generateSqlBtn = document.getElementById('generate-sql-btn');
+        const createReportBtn = document.getElementById('create-report-btn');
+        const backToStep1Btn = document.getElementById('back-to-step1-btn');
+        const backToStep2Btn = document.getElementById('back-to-step2-btn');
+        
+        const naturalRequestInput = document.getElementById('natural-request');
+        const improvedPromptInput = document.getElementById('improved-prompt');
+        const sqlQueryInput = document.getElementById('sql-query');
+        const instanceIdInput = document.getElementById('instance-id');
+        
+        const reportResult = document.getElementById('report-result');
+        const reportError = document.getElementById('report-error');
+        const errorMessage = document.getElementById('error-message');
+        const resultSummary = document.getElementById('result-summary');
+        const downloadLinks = document.getElementById('download-links');
+        
+        const newReportBtn = document.getElementById('new-report-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const requestExamplesBtn = document.getElementById('request-examples-btn');
+        
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        const examplesModal = new bootstrap.Modal(document.getElementById('examplesModal'));
+        
+        // Función para cambiar entre pasos
+        function goToStep(stepNum) {
+            // Ocultar todos los formularios
+            step1Form.style.display = 'none';
+            step2Form.style.display = 'none'; 
+            step3Form.style.display = 'none';
+            
+            // Resetear todas las clases de los pasos
+            step1.className = 'step';
+            step2.className = 'step';
+            step3.className = 'step';
+            
+            // Configurar el paso actual y anteriores
+            if (stepNum === 1) {
+                step1Form.style.display = 'block';
+                step1.className = 'step active';
+            } else if (stepNum === 2) {
+                step2Form.style.display = 'block';
+                step1.className = 'step completed';
+                step2.className = 'step active';
+            } else if (stepNum === 3) {
+                step3Form.style.display = 'block';
+                step1.className = 'step completed';
+                step2.className = 'step completed';
+                step3.className = 'step active';
+            }
+        }
+        
+        // Función para mostrar el modal de carga
+        function showLoading(message, details) {
+            document.getElementById('loading-message').textContent = message;
+            document.getElementById('loading-details').textContent = details;
+            loadingModal.show();
+        }
+        
+        // Función para ocultar el modal de carga
+        function hideLoading() {
+            loadingModal.hide();
+        }
+        
+        // Función para mostrar errores
+        function showError(message) {
+            errorMessage.textContent = message;
+            reportResult.classList.add('d-none');
+            reportError.classList.remove('d-none');
+        }
+        
+        // Función para mostrar resultados
+        function showResult(data) {
+            reportError.classList.add('d-none');
+            reportResult.classList.remove('d-none');
+            
+            resultSummary.innerHTML = `
+                <p style="color: var(--text-color);">Se ha generado su reporte satisfactoriamente.</p>
+                <p style="color: var(--muted-text);">Fecha/Hora: ${new Date().toLocaleString()}</p>
+            `;
+            
+            downloadLinks.innerHTML = '';
+            
+            if (data.downloadUrls && data.downloadUrls.length > 0) {
+                const linksHtml = data.downloadUrls.map((url, index) => `
+                    <a href="${url}" target="_blank" class="btn btn-outline-secondary mb-2">
+                        <i class="bi bi-download me-1"></i>Descargar Archivo ${index + 1}
+                    </a>
+                `).join(' ');
+                
+                downloadLinks.innerHTML = `
+                    <h6 style="color: var(--text-color);">Enlaces de Descarga:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${linksHtml}
+                    </div>
+                `;
+            } else {
+                downloadLinks.innerHTML = '<div class="alert alert-warning">No hay enlaces de descarga disponibles para este reporte.</div>';
+            }
+        }
+        
+        // Mejorar prompt (paso 1 -> 2)
+        improvePromptBtn.addEventListener('click', function() {
+            const naturalRequest = naturalRequestInput.value.trim();
+            
+            if (!naturalRequest) {
+                alert('Por favor describe el reporte que deseas');
+                return;
+            }
+            
+            showLoading('Mejorando su solicitud...', 'Estamos refinando su solicitud para obtener resultados óptimos');
+            
+            fetch('/reports/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'natural_request': naturalRequest
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.improved_prompt) {
+                    improvedPromptInput.value = data.improved_prompt;
+                    goToStep(2);
+                } else if (data.error) {
+                    alert(data.message || 'Error al mejorar el prompt');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error: ' + error.message);
+            });
+        });
+        
+        // Generar SQL (en paso 2)
+        generateSqlBtn.addEventListener('click', function() {
+            const improvedPrompt = improvedPromptInput.value.trim();
+            
+            if (!improvedPrompt) {
+                alert('No hay un prompt mejorado disponible');
+                return;
+            }
+            
+            showLoading('Generando consulta SQL...', 'Convirtiendo su solicitud en una consulta AMC-SQL');
+            
+            fetch('/reports/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'improved_prompt': improvedPrompt
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.sql_query) {
+                    sqlQueryInput.value = data.sql_query;
+                    goToStep(3);
+                } else if (data.error) {
+                    alert(data.message || 'Error al generar SQL');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error: ' + error.message);
+            });
+        });
+        
+        // Generar reporte (paso 3)
+        createReportBtn.addEventListener('click', function() {
+            const sqlQuery = sqlQueryInput.value.trim();
+            const instanceId = instanceIdInput.value.trim();
+            const confirmSql = document.getElementById('confirm-sql').checked;
+            
+            if (!sqlQuery || !instanceId) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            if (!confirmSql) {
+                alert('Por favor confirme que ha revisado la consulta SQL');
+                return;
+            }
+            
+            showLoading('Generando reporte...', 'Ejecutando consulta en Amazon Marketing Cloud. Esto puede tomar unos momentos.');
+            
+            fetch('/reports/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'sql_query': sqlQuery,
+                    'instance_id': instanceId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.error) {
+                    showError(data.message || 'Error al generar el reporte');
+                } else {
+                    showResult(data);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showError('Error: ' + error.message);
+            });
+        });
+        
+        // Navegación entre pasos
+        backToStep1Btn.addEventListener('click', () => goToStep(1));
+        backToStep2Btn.addEventListener('click', () => goToStep(2));
+        
+        // Nuevo reporte
+        newReportBtn.addEventListener('click', function() {
+            naturalRequestInput.value = '';
+            improvedPromptInput.value = '';
+            sqlQueryInput.value = '';
+            reportResult.classList.add('d-none');
+            reportError.classList.add('d-none');
+            goToStep(1);
+        });
+        
+        // Reintentar después de error
+        retryBtn.addEventListener('click', function() {
+            reportError.classList.add('d-none');
+            goToStep(3);
+        });
+        
+        // Mostrar ejemplos
+        requestExamplesBtn.addEventListener('click', function() {
+            examplesModal.show();
+        });
+        
+        // Seleccionar ejemplo
+        document.querySelectorAll('.example-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const exampleText = this.querySelector('p').textContent;
+                naturalRequestInput.value = exampleText;
+                examplesModal.hide();
+            });
+        });
+    });
+</script>
+{% endblock %}

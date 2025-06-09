@@ -1,0 +1,38 @@
+# Entorno virtual
+venv/
+env/
+ENV/
+.venv/
+.env/
+.ENV/
+
+# Archivos de credenciales
+.env
+*.env
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Logs y bases de datos locales
+*.log
+*.sqlite
+*.db
+
+# Archivos temporales
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de conocimiento generados localmente
+knowledge.json
+
+# Archivos de distribución
+dist/
+build/
+*.egg-info/

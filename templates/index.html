@@ -1,0 +1,774 @@
+{% extends "base.html" %}
+
+{% block title %}Amazon AMC Assistant{% endblock %}
+
+{% block sidebar_conversations_toggle %}
+<button class="sidebar-dropdown-toggle">
+    <i class="bi bi-chevron-down"></i>
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+        background-color: var(--primary-bg);
+    }
+
+    /* Contenedor de chat */
+    .chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--secondary-bg);
+        max-width: calc(100% - 250px);
+    }
+
+    .chat-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--secondary-bg);
+    }
+
+    .chat-header h5 {
+        color: var(--text-color);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .header-subtitle {
+        color: var(--muted-text);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .chat-header-actions {
+        display: flex;
+        align-items: center;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 0;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--secondary-bg);
+    }
+
+    /* Nuevo estilo para los mensajes - cambios principales aquí */
+    .message-row {
+        display: flex;
+        padding: 0.75rem 1.5rem;
+        position: relative;
+        width: 100%;
+    }
+
+    .message-content {
+        padding: 0.75rem 1rem;
+        max-width: 70%;
+        color: var(--text-color);
+        line-height: 1.6;
+        border-radius: 0.5rem;
+    }
+
+    /* Estilos diferentes para los mensajes de usuario y AI */
+    .user-message {
+        justify-content: flex-end;
+    }
+
+    .user-message .message-content {
+        background-color: var(--accent-color);
+        color: #fff;
+        border-bottom-right-radius: 0;
+        margin-left: auto;
+    }
+
+    .ai-message {
+        justify-content: flex-start;
+    }
+
+    .ai-message .message-content {
+        background-color: var(--content-bg);
+        border-bottom-left-radius: 0;
+        margin-right: auto;
+    }
+
+    .system-message {
+        text-align: center;
+        padding: 0.75rem 1rem;
+        color: var(--muted-text);
+        margin: 0.5rem auto;
+        max-width: 80%;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+    }
+
+    /* Mensaje de bienvenida estilo chatbot */
+    .welcome-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .robot-icon {
+        font-size: 3rem;
+        color: var(--robot-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-header {
+        font-size: 1.75rem;
+        color: var(--accent-color);
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+    }
+
+    .welcome-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .welcome-subtitle {
+        font-size: 1rem;
+        color: var(--muted-text);
+        margin-bottom: 2rem;
+    }
+
+    .help-section {
+        text-align: left;
+        width: 100%;
+        max-width: 600px;
+        margin-top: 1rem;
+    }
+
+    .help-section h6 {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    .help-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        color: var(--muted-text);
+    }
+
+    .help-item i {
+        color: var(--accent-color);
+        margin-right: 0.75rem;
+        font-size: 1.25rem;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    .help-question {
+        color: var(--text-color);
+        margin-top: 2rem;
+        font-weight: 500;
+    }
+
+    /* Contenedor del input de chat */
+    .chat-input-container {
+        padding: 1rem 1.5rem;
+        background-color: var(--secondary-bg);
+        border-top: 1px solid var(--border-color);
+        margin-top: auto;
+    }
+
+    .chat-input-form {
+        display: flex;
+        position: relative;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--content-bg);
+        overflow: hidden;
+    }
+
+    .chat-input {
+        flex: 1;
+        border: none;
+        padding: 0.75rem 1rem;
+        resize: none;
+        font-size: 1rem;
+        max-height: 150px;
+        outline: none;
+        color: var(--text-color);
+        background-color: var(--content-bg);
+    }
+
+    .chat-input::placeholder {
+        color: var(--muted-text);
+    }
+
+    .chat-actions {
+        display: flex;
+        align-items: flex-end;
+        padding: 0.5rem;
+    }
+
+    .btn-voice {
+        background: none;
+        border: none;
+        color: var(--muted-text);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .btn-voice:hover {
+        color: var(--accent-color);
+    }
+
+    .btn-send {
+        background: none;
+        border: none;
+        color: var(--accent-color);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .btn-send:disabled {
+        color: var(--muted-text);
+        cursor: not-allowed;
+    }
+
+    /* Indicador de escritura */
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        margin: 0 2px;
+        background-color: var(--accent-color);
+        border-radius: 50%;
+        display: inline-block;
+        opacity: 0.6;
+        animation: typing 1.4s infinite ease-in-out both;
+    }
+
+    .typing-indicator span:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes typing {
+
+        0%,
+        80%,
+        100% {
+            transform: scale(0.7);
+            opacity: 0.6;
+        }
+
+        40% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Botón de menú móvil */
+    .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 1.5rem;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    /* Botón de limpiar chat */
+    .btn-clear-chat {
+        background: none;
+        border: none;
+        color: var(--muted-text);
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        margin-left: 0.5rem;
+    }
+
+    .btn-clear-chat:hover {
+        color: var(--text-color);
+    }
+
+    .btn-clear-chat i {
+        margin-right: 0.25rem;
+    }
+
+    /* Contador de caracteres */
+    .char-count {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        font-size: 0.75rem;
+        color: var(--muted-text);
+    }
+
+    /* Media queries para móvil */
+    @media (max-width: 992px) {
+        .chat-container {
+            max-width: 100%;
+        }
+
+        .mobile-menu-toggle {
+            display: block;
+        }
+    }
+
+    /* Formato para código en mensajes */
+    .message-content pre {
+        background-color: var(--primary-bg);
+        color: #e0e0e0;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+        font-family: 'Consolas', 'Courier New', monospace;
+        margin: 0.5rem 0;
+    }
+
+    .message-content code {
+        font-family: 'Consolas', 'Courier New', monospace;
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+    }
+</style>
+
+{% endblock %}
+{% block content %}
+<!-- Contenedor principal -->
+<div class="main-container">
+    <!-- Contenedor de chat -->
+    <div class="chat-container">
+        <div class="chat-header">
+            <div>
+                <h5>Asistente Amazon Marketing Cloud</h5>
+                <div class="header-subtitle">Te ayudaré a analizar tus datos de AMC</div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="btn-clear-chat" id="clearChatBtn" title="Limpiar chat">
+                    <i class="bi bi-trash"></i> Limpiar
+                </button>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Si no hay historial, mostrar mensaje de bienvenida -->
+            {% if not chat_history %}
+            <div class="welcome-container">
+                <div class="robot-icon">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <h4 class="welcome-header">Bienvenido al Asistente de Amazon Marketing Cloud</h4>
+                <div class="welcome-message">
+                    <p class="welcome-subtitle">¿En qué puedo ayudarte hoy?</p>
+
+                    <div class="help-section">
+                        <h6>Puedes preguntarme sobre:</h6>
+                        <div class="help-item">
+                            <i class="bi bi-search"></i>
+                            <div>Cómo analizar datos de Amazon Marketing Cloud</div>
+                        </div>
+                        <div class="help-item">
+                            <i class="bi bi-code-square"></i>
+                            <div>Consultas SQL para AMC y explicación de resultados</div>
+                        </div>
+                        <div class="help-item">
+                            <i class="bi bi-bar-chart"></i>
+                            <div>Interpretación de métricas y tendencias</div>
+                        </div>
+                        <div class="help-item">
+                            <i class="bi bi-lightbulb"></i>
+                            <div>Optimización de campañas basada en datos</div>
+                        </div>
+
+                        <p class="help-question">Escribe tu pregunta a continuación para comenzar.</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Cargar mensajes del historial -->
+            {% for chat in chat_history %}
+            <!-- Mensaje del usuario -->
+            <div class="message-row user-message">
+                <div class="message-content">
+                    {{ chat.user_message|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+            <!-- Respuesta del AI -->
+            <div class="message-row ai-message">
+                <div class="message-content">
+                    {{ chat.ai_response|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="chat-input-container">
+            <form id="chatForm" class="chat-input-form">
+                <textarea id="userInput" class="chat-input" placeholder="Escribe tu mensaje aquí..."
+                    rows="1"></textarea>
+                <div class="chat-actions">
+                    <button type="button" id="voiceButton" class="btn-voice" title="Usar micrófono">
+                        <i class="bi bi-mic"></i>
+                    </button>
+                    <button type="submit" id="sendButton" class="btn-send" disabled title="Enviar mensaje">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+                <div id="charCount" class="char-count">0/4000</div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="clearChatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-exclamation-triangle warning-icon"></i>
+                <p>¿Estás seguro de que deseas limpiar la conversación?</p>
+                <p style="color: #dc3545;">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="confirmClearBtn" class="btn btn-danger">Limpiar conversación</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Variables para el chat
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const voiceButton = document.getElementById('voiceButton');
+        const chatForm = document.getElementById('chatForm');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const charCount = document.getElementById('charCount');
+
+        const clearChatModal = new bootstrap.Modal(document.getElementById('clearChatModal'));
+        const confirmClearBtn = document.getElementById('confirmClearBtn');
+
+
+        let isListening = false;
+        let isRecording = false;
+
+        // Contador de caracteres
+        userInput.addEventListener('input', function () {
+            const count = this.value.length;
+            charCount.textContent = `${count}/2000`;
+
+            if (count > 1800) {
+                charCount.style.color = '#ff4d4d';
+            } else {
+                charCount.style.color = 'var(--muted-text)';
+            }
+        });
+
+        // Ajustar altura del textarea automáticamente
+        function adjustTextareaHeight() {
+            userInput.style.height = 'auto';
+            userInput.style.height = (userInput.scrollHeight) + 'px';
+        }
+
+        // Habilitar/deshabilitar botón de enviar
+        userInput.addEventListener('input', function () {
+            sendButton.disabled = !this.value.trim();
+            adjustTextareaHeight();
+        });
+
+        // Manejar envío del formulario
+        chatForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        // Enter para enviar (Shift+Enter para nueva línea)
+        userInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (userInput.value.trim()) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            }
+        });
+
+        // En el archivo index.html - dentro del script
+        clearChatBtn.addEventListener('click', function () {
+            clearChatModal.show();
+        });
+        confirmClearBtn.addEventListener('click', function () {
+            fetch('/chat/clear', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Ocultar el modal
+                    clearChatModal.hide();
+
+                    if (data.success) {
+                        // Limpiar los mensajes del DOM
+                        chatMessages.innerHTML = '';
+
+                        // Mostrar el mensaje de bienvenida nuevamente
+                        chatMessages.innerHTML = `
+                    <div class="welcome-container">
+                        <div class="robot-icon">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <h4 class="welcome-header">Bienvenido al Asistente de Amazon Marketing Cloud</h4>
+                        <div class="welcome-message">
+                            <p class="welcome-subtitle">¿En qué puedo ayudarte hoy?</p>
+                            
+                            <div class="help-section">
+                                <h6>Puedes preguntarme sobre:</h6>
+                                <div class="help-item">
+                                    <i class="bi bi-search"></i>
+                                    <div>Cómo analizar datos de Amazon Marketing Cloud</div>
+                                </div>
+                                <div class="help-item">
+                                    <i class="bi bi-code-square"></i>
+                                    <div>Consultas SQL para AMC y explicación de resultados</div>
+                                </div>
+                                <div class="help-item">
+                                    <i class="bi bi-bar-chart"></i>
+                                    <div>Interpretación de métricas y tendencias</div>
+                                </div>
+                                <div class="help-item">
+                                    <i class="bi bi-lightbulb"></i>
+                                    <div>Optimización de campañas basada en datos</div>
+                                </div>
+                                
+                                <p class="help-question">Escribe tu pregunta a continuación para comenzar.</p>
+                            </div>
+                        </div>
+                    </div>`;
+                    } else {
+                        // Si hay un error, simplemente recargamos la página
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    clearChatModal.hide();
+                    window.location.reload();
+                });
+        });
+
+        // Función para enviar mensaje
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Si es primer mensaje, limpiar el contenido de bienvenida
+            if (document.querySelector('.welcome-container')) {
+                chatMessages.innerHTML = '';
+            }
+
+            // Añadir mensaje del usuario a la UI
+            appendMessage('user', message);
+
+            // Limpiar y resetear input
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            sendButton.disabled = true;
+            charCount.textContent = '0/2000';
+
+            // Mostrar indicador de carga
+            const loadingId = showLoading();
+
+            // Enviar consulta al servidor
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'query': message
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Ocultar indicador de carga
+                    hideLoading(loadingId);
+
+                    if (data.error) {
+                        appendMessage('system', `Error: ${data.error}`);
+                    } else {
+                        appendMessage('ai', data.response);
+                    }
+
+                    // Enfocar el input para continuar la conversación
+                    userInput.focus();
+                })
+                .catch(error => {
+                    hideLoading(loadingId);
+                    appendMessage('system', `Error de conexión: ${error.message}`);
+                    userInput.focus();
+                });
+        }
+
+        // Función para añadir mensaje al chat
+        function appendMessage(type, content) {
+            const messageRow = document.createElement('div');
+            messageRow.className = `message-row ${type}-message`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            // Formatear contenido
+            let formattedContent = content;
+
+            // Convertir URLs a enlaces clickeables
+            formattedContent = formattedContent.replace(
+                /(https?:\/\/[^\s]+)/g,
+                '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+            );
+
+            // Formatear bloques de código
+            const codeBlockPattern = /```([a-z]*)\n([\s\S]*?)```/g;
+            formattedContent = formattedContent.replace(codeBlockPattern, function (match, lang, code) {
+                return `<pre><code class="${lang}">${code.trim()}</code></pre>`;
+            });
+
+            // Formatear líneas de código en línea
+            const inlineCodePattern = /`([^`]+)`/g;
+            formattedContent = formattedContent.replace(inlineCodePattern, '<code>$1</code>');
+
+            // Convertir saltos de línea
+            formattedContent = formattedContent.replace(/\n/g, '<br>');
+
+            messageContent.innerHTML = formattedContent;
+            messageRow.appendChild(messageContent);
+            chatMessages.appendChild(messageRow);
+
+            if (chatMessages.children.length > 0) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Mostrar indicador de carga
+        function showLoading() {
+            const loadingId = Date.now();
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row ai-message';
+            messageRow.id = `loading-${loadingId}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+
+            messageRow.appendChild(messageContent);
+            chatMessages.appendChild(messageRow);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return loadingId;
+        }
+
+        // Ocultar indicador de carga
+        function hideLoading(loadingId) {
+            const loadingElement = document.getElementById(`loading-${loadingId}`);
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        // Función para reconocimiento de voz
+        function setupSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'es-ES';
+
+                recognition.onstart = function () {
+                    isRecording = true;
+                    voiceButton.innerHTML = '<i class="bi bi-stop-fill"></i>';
+                    voiceButton.classList.add('text-danger');
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    sendButton.disabled = false;
+                    adjustTextareaHeight();
+                    charCount.textContent = `${transcript.length}/2000`;
+                };
+
+                recognition.onerror = function (event) {
+                    console.error('Error en reconocimiento de voz:', event.error);
+                    voiceButton.innerHTML = '<i class="bi bi-mic"></i>';
+                    voiceButton.classList.remove('text-danger');
+                    isRecording = false;
+                };
+
+                recognition.onend = function () {
+                    voiceButton.innerHTML = '<i class="bi bi-mic"></i>';
+                    voiceButton.classList.remove('text-danger');
+                    isRecording = false;
+                };
+
+                voiceButton.addEventListener('click', function () {
+                    if (!isRecording) {
+                        recognition.start();
+                    } else {
+                        recognition.stop();
+                    }
+                });
+            } else {
+                voiceButton.style.display = 'none';
+                console.log('El navegador no soporta reconocimiento de voz');
+            }
+        }
+
+        // Iniciar reconocimiento de voz
+        setupSpeechRecognition();
+
+        // Enfocar el input al cargar la página
+        userInput.focus();
+    });
+</script>
+{% endblock %}

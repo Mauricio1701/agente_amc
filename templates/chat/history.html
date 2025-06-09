@@ -1,0 +1,540 @@
+{% extends "base.html" %}
+
+{% block title %}Amazon AMC Assistant - Historial de Conversaciones{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contenedor principal */
+    .content-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--secondary-bg);
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .header-container h3 {
+        color: var(--text-color);
+        font-weight: 500;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .header-container h3 i {
+        color: var(--accent-color);
+        margin-right: 0.5rem;
+    }
+
+    .header-description {
+        color: var(--muted-text);
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    /* Acordeón de chat */
+    .chat-accordion {
+        background-color: var(--content-bg);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+    }
+
+    .chat-item {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chat-item:last-child {
+        border-bottom: none;
+    }
+
+    .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background-color: var(--content-bg);
+        color: var(--text-color);
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border: none;
+        width: 100%;
+        text-align: left;
+    }
+
+    .chat-header:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .chat-header:focus {
+        outline: none;
+    }
+
+    .chat-header.active {
+        background-color: var(--hover-bg);
+    }
+
+    .chat-title {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .chat-title-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text-color);
+    }
+
+    .chat-date {
+        color: var(--muted-text);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-left: 1rem;
+    }
+
+    .chat-toggle {
+        margin-left: 1rem;
+        color: var(--accent-color);
+        transition: transform 0.2s;
+    }
+
+    .chat-header.active .chat-toggle {
+        transform: rotate(180deg);
+    }
+
+    .chat-content {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+
+    .chat-content.active {
+        max-height: 1000px;
+        transition: max-height 0.5s ease-in;
+    }
+
+    /* Mensajes en el historial */
+    .chat-message {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chat-message:last-child {
+        border-bottom: none;
+    }
+
+    .user-message {
+        background-color: var(--secondary-bg);
+    }
+
+    .ai-message {
+        background-color: var(--content-bg);
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .message-sender {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+    }
+
+    .user-tag {
+        background-color: var(--accent-color);
+        color: var(--primary-bg);
+    }
+
+    .ai-tag {
+        background-color: var(--robot-color);
+        color: var(--primary-bg);
+    }
+
+    .message-time {
+        color: var(--muted-text);
+        font-size: 0.75rem;
+    }
+
+    .message-content {
+        color: var(--text-color);
+        line-height: 1.5;
+        white-space: pre-line;
+    }
+
+    /* Action cards */
+    .action-card {
+        background-color: var(--content-bg);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        margin-top: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1rem;
+        background-color: var(--content-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header h5 {
+        color: var(--text-color);
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1rem;
+    }
+
+    .action-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        background-color: var(--secondary-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+    }
+
+    .action-button:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .action-button.primary {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .action-button.primary:hover {
+        background-color: var(--accent-color);
+        color: var(--primary-bg);
+    }
+
+    .action-button.danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .action-button.danger:hover {
+        background-color: #dc3545;
+        color: var(--primary-bg);
+    }
+
+    .action-button i {
+        margin-right: 0.5rem;
+    }
+
+    /* Modal personalizado */
+    .modal-content {
+        background-color: var(--content-bg);
+        border-color: var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.5rem;
+    }
+
+    .modal-header {
+        border-bottom-color: var(--border-color);
+        padding: 1rem;
+    }
+
+    .modal-title {
+        color: var(--text-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .warning-icon {
+        color: #ffc107;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-footer {
+        border-top-color: var(--border-color);
+        padding: 1rem;
+    }
+
+    .btn-modal {
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background-color: var(--secondary-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-cancel:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background-color: #bb2d3b;
+    }
+
+    /* Empty state */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-title {
+        color: var(--muted-text);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        color: var(--muted-text);
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+        .content-container {
+            padding: 1rem;
+        }
+
+        .action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Contenido principal -->
+<div class="content-container">
+    <div class="header-container">
+        <div>
+            <h3><i class="bi bi-clock-history"></i> Historial de Conversaciones</h3>
+            <p class="header-description">Revise sus interacciones anteriores con el asistente de Amazon AMC</p>
+        </div>
+        
+    </div>
+
+    {% if chat_history %}
+    <div class="chat-accordion">
+        {% for chat in chat_history %}
+        <div class="chat-item">
+            <button class="chat-header {% if loop.first %}active{% endif %}" onclick="toggleChatItem(this)">
+                <div class="chat-title">
+                    <span class="chat-title-text">
+                        <strong>Tú:</strong> {{ chat.user_message[:50] if chat.user_message else "" }}{% if
+                        chat.user_message and chat.user_message|length > 50 %}...{% endif %}
+                    </span>
+                </div>
+                <span class="chat-date">
+                    {% if chat.timestamp is defined and chat.timestamp %}
+                    {% if chat.timestamp is string %}
+                    {{ chat.timestamp }}
+                    {% else %}
+                    {{ chat.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    {% endif %}
+                    {% else %}
+                    Sin fecha
+                    {% endif %}
+                </span>
+                <i class="bi bi-chevron-down chat-toggle"></i>
+            </button>
+            <div class="chat-content {% if loop.first %}active{% endif %}">
+                <div class="chat-message user-message">
+                    <div class="message-header">
+                        <span class="message-sender user-tag">Tú</span>
+                        <span class="message-time">
+                            {% if chat.timestamp is defined and chat.timestamp %}
+                            {% if chat.timestamp is string %}
+                            {{ chat.timestamp }}
+                            {% else %}
+                            {{ chat.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% endif %}
+                            {% else %}
+                            Sin fecha
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="message-content">
+                        {{ chat.user_message|replace('\n', '<br>')|safe if chat.user_message else "" }}
+                    </div>
+                </div>
+                <div class="chat-message ai-message">
+                    <div class="message-header">
+                        <span class="message-sender ai-tag">Asistente IA</span>
+                    </div>
+                    <div class="message-content">
+                        {{ chat.ai_response|replace('\n', '<br>')|safe if chat.ai_response else "" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="chat-accordion">
+        <div class="empty-state">
+            <i class="bi bi-chat-left empty-icon"></i>
+            <h4 class="empty-title">No hay conversaciones guardadas</h4>
+            <p class="empty-description">Inicie una nueva conversación con el asistente para comenzar</p>
+            <a href="{{ url_for('index') }}" class="new-chat-btn">
+                <i class="bi bi-chat-dots"></i> Iniciar Conversación
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Acciones adicionales -->
+    <div class="action-card">
+        <div class="card-header">
+            <h5>Acciones</h5>
+        </div>
+        <div class="card-body">
+            <div class="action-grid">
+                <button type="button" class="action-button" id="exportHistoryBtn">
+                    <i class="bi bi-download"></i> Exportar Historial
+                </button>
+                <button type="button" class="action-button danger" data-bs-toggle="modal"
+                    data-bs-target="#clearHistoryModal">
+                    <i class="bi bi-trash"></i> Limpiar Historial
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar limpieza del historial -->
+<div class="modal fade" id="clearHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-exclamation-triangle warning-icon"></i>
+                <p>¿Estás seguro que deseas eliminar todo el historial de conversaciones?</p>
+                <p style="color: #dc3545;">Esta acción no se puede deshacer.</p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Función para exportar el historial como JSON
+        document.getElementById('exportHistoryBtn').addEventListener('click', function () {
+            // Construir datos para exportar
+            const chatHistory = [];
+
+            {% for chat in chat_history %}
+            chatHistory.push({
+                timestamp: "{{ chat.timestamp|string if chat.timestamp else 'Sin fecha' }}",
+                user_message: "{{ chat.user_message|replace('\n', '\\n')|replace('"', '\\"')|safe if chat.user_message else '' }}",
+                ai_response: "{{ chat.ai_response|replace('\n', '\\n')|replace('"', '\\"')|safe if chat.ai_response else '' }}"
+            });
+            {% endfor %}
+
+            // Crear blob y descargar
+            const blob = new Blob([JSON.stringify(chatHistory, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'amazon_amc_chat_history.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Inicializar el acordeón
+        const chatHeaders = document.querySelectorAll('.chat-header');
+        chatHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+    });
+
+    // Función para alternar visibilidad del chat
+    function toggleChatItem(element) {
+        element.classList.toggle('active');
+        const content = element.nextElementSibling;
+        content.classList.toggle('active');
+    }
+    function clearAndRedirect() {
+        // Limpiar el historial mediante AJAX
+        fetch('/chat/clear', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Redireccionar a la página principal
+                window.location.href = "{{ url_for('index') }}";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // En caso de error, redireccionar igualmente
+                window.location.href = "{{ url_for('index') }}";
+            });
+    }
+</script>
+{% endblock %}

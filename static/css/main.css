@@ -1,0 +1,109 @@
+:root {
+    --primary-color: #2E8B57;     /* Verde oscuro (Sea Green) */
+    --primary-color-dark: #1f6d3d; /* Verde más oscuro */
+    --primary-bg: #121212;        /* Fondo negro/oscuro */
+    --secondary-bg: #1e1e1e;      /* Fondo secundario oscuro */
+    --content-bg: #262626;        /* Fondo de contenido oscuro */
+    --text-color: #e0e0e0;        /* Texto claro */
+    --muted-text: #a0a0a0;        /* Texto secundario */
+    --accent-color: #2E8B57;      /* Color de acento (verde) */
+    --border-color: #333333;      /* Color de bordes */
+    --hover-bg: #303030;          /* Fondo al pasar el cursor */
+    --robot-color: #2E8B57;       /* Color del icono del robot (verde) */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.chat-container {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    background-color: white;
+}
+
+.message {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    max-width: 85%;
+}
+
+.message-user {
+    background-color: #e6f7ed; /* Verde claro para mensajes de usuario */
+    margin-left: auto;
+    border-bottom-right-radius: 5px;
+}
+
+.message-ai {
+    background-color: #f0f0f0;
+    margin-right: auto;
+    border-bottom-left-radius: 5px;
+}
+
+.message-system {
+    background-color: #fff3cd;
+    text-align: center;
+    margin: 10px auto;
+    border-radius: 5px;
+}
+
+.welcome-message {
+    text-align: center;
+    padding: 20px 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    margin: 0 2px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.5s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Formularios */
+textarea.form-control {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+/* Logo */
+.navbar-brand img {
+    filter: brightness(0) invert(1);
+}
