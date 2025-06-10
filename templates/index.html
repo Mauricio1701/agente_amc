@@ -273,6 +273,53 @@
         animation-delay: -0.16s;
     }
 
+    .btn-file {
+        background: none;
+        border: none;
+        color: var(--muted-text);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .btn-file:hover {
+        color: var(--accent-color);
+    }
+
+    .uploaded-file-preview {
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        background-color: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .file-icon {
+        color: var(--accent-color);
+        margin-right: 0.5rem;
+    }
+
+    .file-name {
+        flex: 1;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .remove-file {
+        color: var(--muted-text);
+        cursor: pointer;
+        margin-left: 0.5rem;
+    }
+
+    .remove-file:hover {
+        color: #dc3545;
+    }
+
     @keyframes typing {
 
         0%,
@@ -412,6 +459,26 @@
         border-bottom: 1px solid var(--border-color);
         background-color: var(--secondary-bg);
     }
+
+    .btn-save-chat {
+        background: none;
+        border: none;
+        color: var(--muted-text);
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn-save-chat:hover {
+        color: var(--text-color);
+    }
+
+    .btn-save-chat i {
+        margin-right: 0.25rem;
+    }
 </style>
 
 {% endblock %}
@@ -426,9 +493,9 @@
                 <div class="header-subtitle">Te ayudaré a analizar tus datos de AMC</div>
             </div>
             <div class="chat-header-actions">
-                <label for="fileUpload" class="btn-upload-file" title="Subir archivo">
-                    <i class="bi bi-file-earmark-plus"></i> Archivo
-                </label>
+                <button class="btn-save-chat" id="saveChatBtn" title="Guardar chat">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
                 <input type="file" id="fileUpload" class="file-upload-input" style="display: none;">
                 <button class="btn-clear-chat" id="clearChatBtn" title="Limpiar chat">
                     <i class="bi bi-trash"></i> Limpiar
@@ -493,10 +560,17 @@
         </div>
 
         <div class="chat-input-container">
+            <div id="uploadedFilePreview" class="uploaded-file-preview" style="display: none;"></div>
             <form id="chatForm" class="chat-input-form">
                 <textarea id="userInput" class="chat-input" placeholder="Escribe tu mensaje aquí..."
                     rows="1"></textarea>
                 <div class="chat-actions">
+                    <!-- Movemos el botón de archivo aquí -->
+                    <button type="button" id="fileButton" class="btn-file" title="Subir archivo">
+                        <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                    <input type="file" id="fileUpload" class="file-upload-input" style="display: none;">
+
                     <button type="button" id="voiceButton" class="btn-voice" title="Usar micrófono">
                         <i class="bi bi-mic"></i>
                     </button>
@@ -541,6 +615,9 @@
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
         const voiceButton = document.getElementById('voiceButton');
+        const fileButton = document.getElementById('fileButton');
+        const fileUpload = document.getElementById('fileUpload');
+        const uploadedFilePreview = document.getElementById('uploadedFilePreview');
         const chatForm = document.getElementById('chatForm');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const charCount = document.getElementById('charCount');
@@ -548,7 +625,8 @@
         const clearChatModal = new bootstrap.Modal(document.getElementById('clearChatModal'));
         const confirmClearBtn = document.getElementById('confirmClearBtn');
 
-
+        // Variable para almacenar el archivo subido
+        let uploadedFile = null;
         let isListening = false;
         let isRecording = false;
 
@@ -596,6 +674,7 @@
         clearChatBtn.addEventListener('click', function () {
             clearChatModal.show();
         });
+
         confirmClearBtn.addEventListener('click', function () {
             fetch('/chat/clear', {
                 method: 'POST',
@@ -657,8 +736,7 @@
                 });
         });
 
-        // Función para enviar mensaje
-        // Modificar la función sendMessage para incluir el archivo
+        // Función para enviar mensaje - ÚNICA DEFINICIÓN
         function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -675,7 +753,7 @@
             userInput.value = '';
             userInput.style.height = 'auto';
             sendButton.disabled = true;
-            charCount.textContent = '0/4000';
+            charCount.textContent = '0/2000';
 
             // Mostrar indicador de carga
             const loadingId = showLoading();
@@ -726,10 +804,8 @@
 
                         uploadedFile = null;
                         // Eliminar el indicador de archivo si existe
-                        const fileContainer = document.querySelector('.uploaded-file-container');
-                        if (fileContainer) {
-                            fileContainer.remove();
-                        }
+                        uploadedFilePreview.style.display = 'none';
+                        uploadedFilePreview.innerHTML = '';
                         fileUpload.value = '';
                     }
 
@@ -859,105 +935,109 @@
         // Iniciar reconocimiento de voz
         setupSpeechRecognition();
 
+        // Enlazar el botón de archivo con el input oculto
+        fileButton.addEventListener('click', function () {
+            fileUpload.click();
+        });
+
+        // Manejar la carga de archivos
+        fileUpload.addEventListener('change', function (e) {
+            if (this.files && this.files[0]) {
+                uploadedFile = this.files[0];
+
+                // Actualizar la vista previa del archivo encima del prompt
+                uploadedFilePreview.innerHTML = `
+                    <span class="file-icon"><i class="bi bi-file-earmark-text"></i></span>
+                    <span class="file-name">${uploadedFile.name}</span>
+                    <span class="remove-file" title="Eliminar archivo"><i class="bi bi-x"></i></span>
+                `;
+                uploadedFilePreview.style.display = 'flex';
+
+                // Permitir eliminar el archivo
+                uploadedFilePreview.querySelector('.remove-file').addEventListener('click', function () {
+                    uploadedFilePreview.style.display = 'none';
+                    uploadedFilePreview.innerHTML = '';
+                    uploadedFile = null;
+                    fileUpload.value = '';
+                });
+            }
+        });
+
         // Enfocar el input al cargar la página
         userInput.focus();
     });
+    // Add to your existing JavaScript in the DOMContentLoaded handler
+    const saveChatBtn = document.getElementById('saveChatBtn');
 
-    // Añadir esto dentro del script existente en document.addEventListener
-    const fileUpload = document.getElementById('fileUpload');
-    let uploadedFile = null;
+    // Event listener for save chat button
+    saveChatBtn.addEventListener('click', function () {
+        // Check if there are any messages to save
+        const userMessages = document.querySelectorAll('.user-message .message-content');
+        const aiMessages = document.querySelectorAll('.ai-message .message-content');
 
-    // Manejar la carga de archivos
-    fileUpload.addEventListener('change', function (e) {
-        if (this.files && this.files[0]) {
-            uploadedFile = this.files[0];
-
-            // Mostrar indicador de archivo cargado
-            const uploadedFileContainer = document.createElement('div');
-            uploadedFileContainer.className = 'uploaded-file-container';
-            uploadedFileContainer.innerHTML = `
-            <div class="file-upload-badge">
-                <i class="bi bi-file-earmark-text"></i>
-                ${uploadedFile.name}
-                <span class="remove-file" title="Eliminar archivo"><i class="bi bi-x"></i></span>
-            </div>`;
-
-            // Insertar antes de los mensajes
-            chatMessages.insertBefore(uploadedFileContainer, chatMessages.firstChild);
-
-            // Permitir eliminar el archivo
-            uploadedFileContainer.querySelector('.remove-file').addEventListener('click', function () {
-                uploadedFileContainer.remove();
-                uploadedFile = null;
-                fileUpload.value = '';
-            });
-        }
-    });
-
-    // Modificar la función sendMessage para incluir el archivo
-    function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
-
-        // Si es primer mensaje, limpiar el contenido de bienvenida
-        if (document.querySelector('.welcome-container')) {
-            chatMessages.innerHTML = '';
+        if (userMessages.length === 0) {
+            alert('No hay mensajes para guardar.');
+            return;
         }
 
-        // Añadir mensaje del usuario a la UI
-        appendMessage('user', message);
+        // Create chat history array
+        const chatHistory = [];
 
-        // Limpiar y resetear input
-        userInput.value = '';
-        userInput.style.height = 'auto';
-        sendButton.disabled = true;
-        charCount.textContent = '0/2000';
-
-        // Mostrar indicador de carga
-        const loadingId = showLoading();
-
-        // Crear FormData para enviar mensaje y archivo
-        const formData = new FormData();
-        formData.append('query', message);
-
-        if (uploadedFile) {
-            formData.append('file', uploadedFile);
+        // We need to pair user messages with AI responses
+        for (let i = 0; i < userMessages.length; i++) {
+            if (i < aiMessages.length) {
+                chatHistory.push({
+                    user_message: userMessages[i].innerText,
+                    ai_response: aiMessages[i].innerText
+                });
+            }
         }
 
-        // Enviar consulta al servidor
-        fetch('/chat', {
+        // Send chat history to backend
+        fetch('/save_chat_history', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ chat_history: chatHistory })
         })
             .then(response => response.json())
             .then(data => {
-                // Ocultar indicador de carga
-                hideLoading(loadingId);
-
                 if (data.error) {
-                    appendMessage('system', `Error: ${data.error}`);
+                    console.error('Error al guardar chat:', data.error);
+                    alert('Error al guardar el chat: ' + data.error);
                 } else {
-                    appendMessage('ai', data.response);
-                }
+                    console.log('Chat guardado exitosamente:', data);
 
-                // Si se envió un archivo, eliminar su referencia
-                if (uploadedFile) {
-                    uploadedFile = null;
-                    // Eliminar el indicador de archivo si existe
-                    const fileContainer = document.querySelector('.uploaded-file-container');
-                    if (fileContainer) {
-                        fileContainer.remove();
-                    }
-                }
+                    // Mostrar los datos del array en la consola de manera formateada
+                    console.log('===== ARRAY DE CHAT =====');
+                    console.table(data.array_data);
+                    console.log('========================');
 
-                // Enfocar el input para continuar la conversación
-                userInput.focus();
+                    // Crear y mostrar notificación con datos
+                    const notification = document.createElement('div');
+                    notification.className = 'system-message';
+                    notification.innerHTML = `
+            <div class="message-content">
+                <i class="bi bi-check-circle"></i> Chat guardado correctamente (${data.count} mensajes)
+                <br>
+                <small>Revisa la consola del navegador para ver el array completo (F12)</small>
+            </div>
+        `;
+                    chatMessages.appendChild(notification);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Remove notification after 5 seconds
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 5000);
+                }
             })
             .catch(error => {
-                hideLoading(loadingId);
-                appendMessage('system', `Error de conexión: ${error.message}`);
-                userInput.focus();
+                console.error('Error en la petición:', error);
+                alert('Error de conexión al guardar el chat.');
             });
-    }
+    });
 </script>
 {% endblock %}

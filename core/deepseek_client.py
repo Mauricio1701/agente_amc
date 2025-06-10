@@ -134,26 +134,119 @@ class DeepSeekClient:
         prompt_lower = prompt.lower().strip()
         
         if prompt_lower in ["hola", "hola!", "hola.", "hola,"]:
-            logger.info("Saludo detectado, respondiendo de forma personalizada")
+            logger.info("Saludo detectado, respondiendo de forma profesional")
             self.conversation_context.append({"role": "user", "content": prompt})
-            self.conversation_context.append({"role": "assistant", "content": "¡Hola, Raúl! ¿Qué tal, bro? ¿En qué te ayudo hoy?"})
-            return "¡Hola, Raúl! ¿Qué tal, bro? ¿En qué te ayudo hoy?"
+            self.conversation_context.append({"role": "assistant", "content": "¡Hola! Soy tu asistente especializado en Amazon Marketing Cloud. ¿En qué puedo ayudarte hoy?"})
+            return "¡Hola! Soy tu asistente especializado en Amazon Marketing Cloud. ¿En qué puedo ayudarte hoy?"
 
         if "mejorar el agente" in prompt_lower:
             logger.info("Consulta sobre mejorar el agente detectada")
-            response = ("Claro que sí, Raúl. Para mejorar el agente, te sugiero que mantengamos una conversación más fluida. Ahora puedo recordar nuestro historial para darte respuestas más naturales. También optimicé mi expertise en AMC para darte consultas SQL más precisas. ¿Qué te parece si probamos con un reporte de ventas? Dime qué necesitas.")
+            response = ("Para mejorar el asistente, he optimizado mi capacidad de análisis de datos de AMC. Puedo recordar nuestro historial de conversación para ofrecer respuestas más contextualizadas y proporcionar consultas SQL más precisas. ¿Te gustaría probar con un reporte específico de ventas o algún análisis en particular?")
             self.conversation_context.append({"role": "user", "content": prompt})
             self.conversation_context.append({"role": "assistant", "content": response})
             return response
+        
+        # Detectar si es una solicitud relacionada con consultas SQL de AMC
+        is_amc_query = False
+        amc_keywords = [
+            'amc sql', 'consulta sql', 'query sql', 'reporte de', 'mostrar ventas', 'mostrar impresiones', 
+            'mostrar clics', 'mostrar conversiones', 'dame un reporte', 'generar consulta', 'generar sql',
+            'obtener datos de', 'métricas de', 'estadísticas de', 'conversion_event', 'traffic_event',
+            'por campaña', 'por asin', 'por región', 'total_product_sales', 'impressions', 'genera una consulta'
+        ]
+        
+        for keyword in amc_keywords:
+            if keyword in prompt_lower:
+                is_amc_query = True
+                break
+        
+        if is_amc_query:
+            logger.info("Detectada consulta relacionada con AMC SQL")
+            try:
+                # Generar la consulta SQL
+                sql_query = self.generate_amc_sql(prompt)
+                
+                # Validar explícitamente que la consulta es válida para AMC
+                if not self._is_valid_amc_sql(sql_query):
+                    logger.warning(f"La consulta generada '{sql_query}' no cumple con las reglas de AMC, intentando regenerar")
+                    # Intentar regenerar con instrucciones más específicas
+                    clarified_prompt = (
+                        f"Necesito una consulta AMC-SQL válida para: {prompt}\n\n"
+                        f"IMPORTANTE: Recuerda que AMC-SQL tiene estas restricciones estrictas:\n"
+                        f"1. No uses DATE_SUB, usa SECONDS_BETWEEN para filtros de tiempo (formato: SECONDS_BETWEEN(fecha1, CURRENT_DATE) <= 60*60*24*30)\n"
+                        f"2. No uses INTERVAL ni funciones temporales no soportadas\n"
+                        f"3. Siempre usa agregaciones (SUM, COUNT, AVG, etc.)\n"
+                        f"4. Incluye GROUP BY para todas las columnas no agregadas\n"
+                        f"5. No uses ORDER BY, SELECT * ni otras construcciones no soportadas\n"
+                        f"6. Usa abreviaturas como alias de tablas (ej. 'c' para conversions)\n"
+                        f"7. Elige la tabla correcta (dsp_clicks para clics, dsp_impressions para impresiones, etc.)"
+                    )
+                    sql_query = self.generate_amc_sql(clarified_prompt)
+                    
+                    # Verificar nuevamente
+                    if not self._is_valid_amc_sql(sql_query):
+                        logger.error("No se pudo generar una consulta SQL válida para AMC")
+                        return "Lo siento, no pude generar una consulta SQL válida para Amazon Marketing Cloud con tu solicitud. Por favor, intenta reformular tu pregunta de manera más específica mencionando qué métricas (ventas, impresiones, clics) y dimensiones (ASIN, campaña, región) te interesan."
+                
+                # Verificar si el usuario solo quiere la consulta SQL
+                if any(term in prompt_lower for term in ['dame sql', 'genera sql', 'solo sql', 'únicamente sql', 'solamente sql', 'solo la consulta', 'quiero el sql', 'genera una consulta']):
+                    # Devolver solo la consulta SQL formateada
+                    answer = f"```sql\n{sql_query}\n```"
+                    
+                    # Guardar en historial
+                    self.conversation_context.append({"role": "user", "content": prompt})
+                    self.conversation_context.append({"role": "assistant", "content": answer})
+                    self.chat_history.add_message(prompt, answer)
+                    return answer
+                
+                # Caso contrario: crear una respuesta explicativa concisa
+                system_context = (
+                    "Eres un experto en Amazon Marketing Cloud. El usuario ha solicitado una consulta SQL. "
+                    "Proporciona una respuesta breve y directa que:"
+                    "1. Incluya la consulta SQL formateada en un bloque de código"
+                    "2. Añada solo una explicación muy breve de lo que hace la consulta"
+                    "No incluyas información adicional, pasos de implementación o notas extensas."
+                )
+                
+                explanation_prompt = (
+                    f"La consulta del usuario es: '{prompt}'\n\n"
+                    f"He generado esta consulta SQL para AMC: {sql_query}\n\n"
+                    "Proporciona la consulta SQL y una explicación breve de lo que hace (máximo 2 frases)."
+                )
+                
+                messages = [
+                    ("system", system_context),
+                    ("human", explanation_prompt)
+                ]
+                
+                # Obtener la explicación
+                response = self.llm.invoke(messages)
+                answer = response.content if hasattr(response, "content") else str(response)
+                
+                # Asegurarse de que la respuesta incluya la consulta SQL formateada
+                if "```sql" not in answer:
+                    # Si no hay bloque de código, poner la consulta SQL al principio
+                    answer = f"```sql\n{sql_query}\n```\n\n{answer}"
+                
+                # Actualizar el contexto de la conversación
+                self.conversation_context.append({"role": "user", "content": prompt})
+                self.conversation_context.append({"role": "assistant", "content": answer})
+                self._extract_knowledge(prompt, answer)
+                self.chat_history.add_message(prompt, answer)
+                return answer
+            except Exception as e:
+                logger.error(f"Error generando consulta AMC SQL: {str(e)}")
+                # Continuar con el flujo normal en caso de error
 
+        
         if system is None:
             system = (
-                "Eres un asistente amigable y conversacional especializado en Amazon Marketing Cloud (AMC). "
-                "Dirígete al usuario como Raúl y usa un tono cálido y natural, como si hablaras con un amigo. "
-                "Evita usar listas numeradas, asteriscos o guiones para estructurar tus respuestas; escribe en párrafos simples. "
+                "Eres un asistente profesional especializado en Amazon Marketing Cloud (AMC). "
+                "Usa un tono formal y experto, manteniendo un estilo claro y directo. "
+                "Evita usar listas numeradas, asteriscos o guiones para estructurar tus respuestas; escribe en párrafos concisos. "
                 "Si la consulta es simple, responde en no más de 100 palabras. "
-                "Si es un análisis o consulta sobre AMC, proporciona información relevante sin excederte en detalles innecesarios. "
-                "Si el prompt es ambiguo, pide aclaraciones al usuario de forma natural."
+                "Si es un análisis o consulta sobre AMC, proporciona información detallada y técnicamente precisa. "
+                "Si el prompt es ambiguo, pide aclaraciones específicas para ofrecer la mejor respuesta posible."
             )
 
         messages = [("system", system)]
@@ -161,9 +254,9 @@ class DeepSeekClient:
         if use_file_context and self.knowledge:
             context = "\n".join(
                 f"Conocimiento sobre {item['topic']}: {', '.join(item['facts'])}"
-                for item in self.knowledge
+                for item in sorted(self.knowledge, key=lambda x: x.get('last_accessed', ''), reverse=True)[:5]
             )
-            messages.append(("system", f"Conocimiento previo:\n{context[:2000]}..."))
+            messages.append(("system", f"Conocimiento previo relevante:\n{context[:2000]}"))
 
         if history:
             for message in history[-5:]:
@@ -178,17 +271,17 @@ class DeepSeekClient:
 
             if "reporte" in prompt_lower or "ventas" in prompt_lower or "impresiones" in prompt_lower or "clics" in prompt_lower:
                 if not re.search(r"\b(por|en)\b", prompt_lower):
-                    answer = "Raúl, tu consulta parece ser sobre AMC, pero no estoy seguro de cómo agrupar los datos. ¿Quieres un reporte de ventas por campaña, por ASIN, o tal vez por región? Dime un poco más para ayudarte mejor."
+                    answer = "Su consulta parece relacionarse con reportes de AMC, pero no detecto una dimensión clara para agrupar los datos. ¿Le gustaría un reporte por campaña, por ASIN, por región o alguna otra dimensión específica? Con esa información podré proporcionarle un análisis más preciso."
 
             self.conversation_context.append({"role": "user", "content": prompt})
             self.conversation_context.append({"role": "assistant", "content": answer})
             self._extract_knowledge(prompt, answer)
-            self.chat_history.add_message(prompt, answer)  # Añadir mensaje al historial de la sesión
+            self.chat_history.add_message(prompt, answer)
             return answer
         except Exception as e:
             logger.error(f"Error en chat: {str(e)}")
-            return f"Error al procesar la solicitud: {str(e)}"
-
+            return f"Se ha producido un error al procesar su solicitud. Por favor, inténtelo de nuevo o reformule su consulta."
+        
     def generate_amc_sql(self, natural_query: str, max_retries: int = 3) -> str:
         system_prompt = (
             "Eres un experto en AMC-SQL (Amazon Marketing Cloud SQL). Convierte solicitudes en lenguaje natural sobre reportes de Amazon AMC "
@@ -407,15 +500,50 @@ class DeepSeekClient:
                 continue
 
     def _is_valid_amc_sql(self, sql_query: str) -> bool:
+        """Verifica que la consulta SQL cumple con las restricciones de AMC."""
         sql_upper = sql_query.upper()
+        
+        # Verificaciones básicas de estructura
         if "SELECT" not in sql_upper or "FROM" not in sql_upper:
+            logger.warning("Consulta SQL sin SELECT o FROM")
             return False
+            
+        # Verificar que tiene GROUP BY si hay columnas no agregadas
         if "GROUP BY" not in sql_upper:
+            logger.warning("Consulta SQL sin GROUP BY")
             return False
-        if any(illegal in sql_upper for illegal in ["SELECT *", "ORDER BY"]):
-            return False
+            
+        # Verificar que no usa construcciones prohibidas
+        prohibited = ["SELECT *", "ORDER BY", "DATE_SUB", "DATE_DIFF", "FLOOR", "INTERVAL"]
+        for term in prohibited:
+            if term in sql_upper:
+                logger.warning(f"Consulta SQL usa término prohibido: {term}")
+                return False
+        
+        # Verificar que usa funciones de agregación
         if not any(agg in sql_upper for agg in ["SUM(", "COUNT(", "AVG(", "MIN(", "MAX("]):
+            logger.warning("Consulta SQL sin funciones de agregación")
             return False
+            
+        # Verificar que los filtros de tiempo usan SECONDS_BETWEEN correctamente
+        if "ÚLTIMOS" in sql_upper or "ULTIMOS" in sql_upper or "RECIENTES" in sql_upper:
+            if "SECONDS_BETWEEN" not in sql_upper:
+                logger.warning("Consulta SQL con filtro temporal pero sin SECONDS_BETWEEN")
+                return False
+        
+        # Verificar que usa tablas AMC válidas
+        valid_tables = [
+            "CONVERSIONS", "CONVERSIONS_WITH_RELEVANCE", 
+            "AMAZON_ATTRIBUTED_EVENTS_BY_CONVERSION_TIME", "AMAZON_ATTRIBUTED_EVENTS_BY_TRAFFIC_TIME",
+            "DSP_IMPRESSIONS", "DSP_IMPRESSIONS_BY_MATCHED_SEGMENTS", "DSP_IMPRESSIONS_BY_USER_SEGMENTS",
+            "DSP_CLICKS", "DSP_VIDEO_EVENTS_FEED", "DSP_VIEWS", "SPONSORED_ADS_TRAFFIC"
+        ]
+        
+        has_valid_table = any(table in sql_upper for table in valid_tables)
+        if not has_valid_table:
+            logger.warning("Consulta SQL sin tablas AMC válidas")
+            return False
+            
         return True
 
     def _get_completion(self, prompt: str) -> str:
@@ -482,13 +610,7 @@ class DeepSeekClient:
             # Preparar y enviar al modelo
             response = self._get_completion(enriched_query)
             
-            # Guardar en el historial de chat
-            if hasattr(self, 'chat_history') and self.chat_history:
-                # Verificar que el chat_history tenga un session_id configurado
-                if self.chat_history.session_id:
-                    self.chat_history.add_message(query, response)
-                else:
-                    logger.warning("No hay session_id configurado en chat_history")
+            # QUITAR LA PARTE DE GUARDAR EN EL HISTORIAL
             
             # Extraer conocimiento de la interacción
             try:

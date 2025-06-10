@@ -6,6 +6,14 @@ from core.database import Database
 from core.deepseek_client import DeepSeekClient
 from core.voice_handler import VoiceHandler
 from core.amazon_client_amc import generate_amc_report
+import requests
+import json
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'amazon_amc_analyzer_secret_key')
@@ -42,7 +50,7 @@ def chat():
             app.logger.info(f"Archivo recibido: {file.filename}")
             
             try:
-                # Procesar el contenido del archivo utilizando la función process_file
+                # Procesar el contenido del archivo
                 from core.file_processor import process_file
                 file_content = process_file(file)
                 app.logger.info(f"Archivo procesado. Longitud del contenido: {len(file_content)}")
@@ -50,25 +58,59 @@ def chat():
                 app.logger.error(f"Error procesando archivo: {str(e)}")
                 file_content = f"[No se pudo procesar completamente el archivo: {file.filename}. Error: {str(e)}]"
         
-        # Añadir mensaje para verificar si se está procesando el archivo
-        prompt = query
-        if file_content:
-            prompt = f"Basándote en el siguiente contenido de archivo, responde a esta pregunta: '{query}'\n\nContenido del archivo:\n{file_content}"
+        # Obtener respuesta usando analyze_with_context
+        response = deepseek_client.analyze_with_context(query, file_content=file_content)
         
-        app.logger.info(f"Enviando prompt a DeepSeek con contenido de archivo: {len(file_content) > 0}")
-        response = deepseek_client.analyze_with_context(prompt, file_content=file_content)
-        
-        # Guardar explícitamente la conversación en el historial
-        if not deepseek_client.chat_history.add_message(query, response):
-            app.logger.warning("No se pudo guardar la conversación en el historial")
+        # Guardar explícitamente la conversación en el historial SOLO UNA VEZ
+        deepseek_client.chat_history.add_message(query, response)
         
         return jsonify({'response': response})
-        
     except Exception as e:
         app.logger.error(f"Error en proceso de chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Modificar la ruta reports() para incluir la fecha actual
+@app.route("/save_chat_history", methods=["POST"])
+def save_chat_history_from_frontend():
+    """
+    Recibe el historial del chat desde el frontend (HTML) y lo muestra en la consola
+    """
+    data = request.get_json()
+    chat_history = data.get("chat_history")
+
+    if not chat_history:
+        logger.warning("No se recibió historial de chat para guardar.")
+        return jsonify({"message": "No hay historial de chat para procesar."}), 200
+
+    # Mostrar el historial de chat en la consola
+    logger.info("===== HISTORIAL DE CHAT GUARDADO =====")
+    logger.info(f"Total de mensajes: {len(chat_history)}")
+    
+    # Crear una representación visual del array para mostrar en consola
+    array_representation = []
+    for idx, msg in enumerate(chat_history):
+        array_representation.append({
+            "index": idx,
+            "user_message": msg.get('user_message', ''),
+            "ai_response": msg.get('ai_response', '')
+        })
+        
+        logger.info(f"\n--- Mensaje {idx + 1} ---")
+        logger.info(f"USUARIO: {msg.get('user_message', '')}")
+        logger.info(f"ASISTENTE: {msg.get('ai_response', '')}")
+    
+    logger.info("===== FIN DEL HISTORIAL =====")
+    
+    # Formato JSON para depuración (opcional)
+    logger.info(f"JSON completo: {json.dumps(chat_history, ensure_ascii=False, indent=2)}")
+    
+    # Devolver el array completo para visualizarlo
+    return jsonify({
+        "message": "Historial de chat guardado en la consola del servidor.",
+        "status": "success",
+        "count": len(chat_history),
+        "array_data": array_representation
+    }), 200
+    
 @app.route('/reports')
 def reports():
     all_reports = db.get_all_reports() or []

@@ -48,7 +48,6 @@ class AmazonTokenManager:
             decoded_token = jwt.decode(self.access_token, options={"verify_signature": False})
             self.token_expiry = datetime.fromtimestamp(decoded_token["exp"])
         except Exception as e:
-            logger.error(f"Error al decodificar el token: {str(e)}")
             self.token_expiry = datetime.now()  
 
     def is_token_expired(self) -> bool:
@@ -81,10 +80,8 @@ class AmazonTokenManager:
             self.refresh_token = token_data.get("refresh_token", self.refresh_token)
             self._decode_token_expiry()
             
-            logger.info("Token de acceso renovado exitosamente")
             return self.access_token
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error al renovar el token: {str(e)}")
             if response and response.status_code == 401:
                 raise Exception("Credenciales inválidas. Verifica AMAZON_AMC_CLIENT_ID, AMAZON_AMC_CLIENT_SECRET o AMAZON_AMC_REFRESH_TOKEN.")
             raise

@@ -186,7 +186,7 @@
         font-size: 0.875rem;
     }
     
-    /* Modal */
+    /* Modal de Ejemplos (Aún Bootstrap) */
     .modal-content {
         background-color: var(--content-bg);
         border-color: var(--border-color);
@@ -321,11 +321,35 @@
     .d-none {
         display: none;
     }
+
+    /* --- Custom Loading Overlay --- */
+    .loading-overlay {
+        position: fixed; /* Fixed position to cover the entire viewport */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+        display: flex; /* Use flexbox to center content */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+        z-index: 1050; /* Ensure it's above other content, similar to Bootstrap's default modal z-index */
+        backdrop-filter: blur(2px); /* Optional: add a slight blur effect */
+        -webkit-backdrop-filter: blur(2px); /* For Safari support */
+    }
+
+    .loading-content {
+        background-color: var(--content-bg); /* Use your existing content background */
+        padding: 2.5rem; /* More padding for a nicer look */
+        border-radius: 0.75rem;
+        text-align: center;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+    }
+    /* --- Fin Custom Loading Overlay --- */
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Contenedor principal -->
 <div class="content-container">
     <div class="mb-4">
         <h3 style="color: var(--text-color);">Generar Nuevo Reporte AMC</h3>
@@ -334,7 +358,6 @@
 
     <div class="content-card">
         <div class="card-body">
-            <!-- Indicador de pasos -->
             <div class="step-indicator">
                 <div class="step active" id="step1">
                     <div class="step-icon">
@@ -356,9 +379,7 @@
                 </div>
             </div>
             
-            <!-- Formulario de generación de reportes -->
             <div id="report-forms">
-                <!-- Paso 1: Solicitud natural -->
                 <div id="step1-form">
                     <div class="mb-3">
                         <label for="natural-request" class="form-label">Describe el reporte que deseas (en lenguaje natural):</label>
@@ -377,7 +398,6 @@
                     </div>
                 </div>
                 
-                <!-- Paso 2: SQL -->
                 <div id="step2-form" style="display: none;">
                     <div class="mb-3">
                         <label for="improved-prompt" class="form-label">Prompt Mejorado:</label>
@@ -399,7 +419,6 @@
                     </div>
                 </div>
                 
-                <!-- Paso 3: Reporte -->
                 <div id="step3-form" style="display: none;">
                     <div class="mb-3">
                         <label for="instance-id" class="form-label">Instance ID:</label>
@@ -431,7 +450,6 @@
         </div>
     </div>
 
-    <!-- Resultado del reporte -->
     <div id="report-result" class="d-none">
         <div class="content-card">
             <div class="card-header bg-success text-white">
@@ -439,12 +457,10 @@
             </div>
             <div class="card-body">
                 <div id="result-summary" class="mb-3">
-                    <!-- Resumen del reporte se insertará aquí -->
-                </div>
+                    </div>
                 
                 <div id="download-links" class="mb-3">
-                    <!-- Enlaces de descarga se insertarán aquí -->
-                </div>
+                    </div>
                 
                 <hr>
                 
@@ -460,7 +476,6 @@
         </div>
     </div>
 
-    <!-- Error del reporte -->
     <div id="report-error" class="d-none">
         <div class="alert alert-danger">
             <h5><i class="bi bi-exclamation-triangle me-2"></i>Error al Generar el Reporte</h5>
@@ -475,7 +490,6 @@
     </div>
 </div>
 
-<!-- Ejemplos de solicitudes -->
 <div class="modal fade" id="examplesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -512,18 +526,13 @@
     </div>
 </div>
 
-<!-- Modal de carga -->
-<div class="modal fade" id="loadingModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center p-5">
-                <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
-                    <span class="visually-hidden">Procesando...</span>
-                </div>
-                <h5 id="loading-message" style="color: var(--text-color);">Procesando su solicitud...</h5>
-                <p class="text-muted" id="loading-details">Esto puede tomar unos momentos</p>
-            </div>
+<div id="customLoadingOverlay" class="loading-overlay d-none">
+    <div class="loading-content">
+        <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Procesando...</span>
         </div>
+        <h5 id="loading-message" style="color: var(--text-color);">Procesando su solicitud...</h5>
+        <p class="text-muted" id="loading-details">Esto puede tomar unos momentos</p>
     </div>
 </div>
 {% endblock %}
@@ -560,8 +569,12 @@
         const retryBtn = document.getElementById('retry-btn');
         const requestExamplesBtn = document.getElementById('request-examples-btn');
         
-        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-        const examplesModal = new bootstrap.Modal(document.getElementById('examplesModal'));
+        // --- Custom Loading Overlay ---
+        const customLoadingOverlay = document.getElementById('customLoadingOverlay');
+        // --- Fin Custom Loading Overlay ---
+
+        // Modal de Ejemplos (sigue siendo de Bootstrap)
+        const examplesModal = new bootstrap.Modal(document.getElementById('examplesModal')); 
         
         // Función para cambiar entre pasos
         function goToStep(stepNum) {
@@ -591,16 +604,16 @@
             }
         }
         
-        // Función para mostrar el modal de carga
+        // Función para mostrar el modal de carga (CUSTOM)
         function showLoading(message, details) {
             document.getElementById('loading-message').textContent = message;
             document.getElementById('loading-details').textContent = details;
-            loadingModal.show();
+            customLoadingOverlay.classList.remove('d-none'); // Mostrar el overlay personalizado
         }
         
-        // Función para ocultar el modal de carga
+        // Función para ocultar el modal de carga (CUSTOM)
         function hideLoading() {
-            loadingModal.hide();
+            customLoadingOverlay.classList.add('d-none'); // Ocultar el overlay personalizado
         }
         
         // Función para mostrar errores
@@ -641,7 +654,7 @@
         }
         
         // Mejorar prompt (paso 1 -> 2)
-        improvePromptBtn.addEventListener('click', function() {
+        improvePromptBtn.addEventListener('click', async () => {
             const naturalRequest = naturalRequestInput.value.trim();
             
             if (!naturalRequest) {
@@ -651,30 +664,36 @@
             
             showLoading('Mejorando su solicitud...', 'Estamos refinando su solicitud para obtener resultados óptimos');
             
-            fetch('/reports/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'natural_request': naturalRequest
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                
+            console.log("Entro", naturalRequest);
+
+            try {
+                const response = await fetch('/reports/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'natural_request': naturalRequest
+                    })
+                });
+
+                const data = await response.json();
+
+                console.log(data);
+
                 if (data.improved_prompt) {
                     improvedPromptInput.value = data.improved_prompt;
                     goToStep(2);
                 } else if (data.error) {
                     alert(data.message || 'Error al mejorar el prompt');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
+                console.error('Error al mejorar el prompt:', error); // Log the actual error
+                alert('Ocurrió un error de red o del servidor al mejorar el prompt: ' + error.message);
+            } finally {
                 hideLoading();
-                alert('Error: ' + error.message);
-            });
+                console.log("Salio");
+            }
         });
         
         // Generar SQL (en paso 2)
@@ -699,8 +718,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                hideLoading();
-                
                 if (data.sql_query) {
                     sqlQueryInput.value = data.sql_query;
                     goToStep(3);
@@ -709,8 +726,11 @@
                 }
             })
             .catch(error => {
+                console.error('Error al generar SQL:', error); // Log the actual error
+                alert('Ocurrió un error de red o del servidor al generar SQL: ' + error.message);
+            })
+            .finally(() => {
                 hideLoading();
-                alert('Error: ' + error.message);
             });
         });
         
@@ -744,8 +764,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                hideLoading();
-                
                 if (data.error) {
                     showError(data.message || 'Error al generar el reporte');
                 } else {
@@ -753,8 +771,11 @@
                 }
             })
             .catch(error => {
+                console.error('Error al crear el reporte:', error); // Log the actual error
+                showError('Ocurrió un error de red o del servidor al crear el reporte: ' + error.message);
+            })
+            .finally(() => {
                 hideLoading();
-                showError('Error: ' + error.message);
             });
         });
         
