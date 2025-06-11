@@ -6,6 +6,9 @@ from core.database import Database
 from core.deepseek_client import DeepSeekClient
 from core.voice_handler import VoiceHandler
 from core.amazon_client_amc import generate_amc_report
+from core.file_downloader import download_and_process_csv, extract_filename_from_url
+import csv
+import io
 import requests
 import json
 import logging
@@ -35,6 +38,33 @@ def index():
     # Cargar el historial de chat para la sesión actual
     chat_history = deepseek_client.chat_history.get_history()
     return render_template('index.html', now=datetime.now(), chat_history=chat_history)
+
+def parse_csv_content(content: str, max_rows: int = 100):
+    """Parsea contenido CSV y devuelve headers y filas estructuradas"""
+    try:
+        if not content:
+            return None, []
+        
+        # Usar el módulo csv de Python para parsing correcto
+        csv_reader = csv.reader(io.StringIO(content))
+        rows = list(csv_reader)
+        
+        if not rows:
+            return None, []
+        
+        headers = rows[0] if rows else []
+        data_rows = rows[1:max_rows+1] if len(rows) > 1 else []
+        
+        return {
+            'headers': headers,
+            'rows': data_rows,
+            'total_rows': len(rows) - 1,  # -1 para excluir header
+            'showing_rows': len(data_rows),
+            'has_more': len(rows) > max_rows + 1
+        }
+    except Exception as e:
+        logger.error(f"Error parsing CSV: {str(e)}")
+        return None
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -137,23 +167,14 @@ def save_chat_history_from_frontend():
         "count": len(chat_history),
         "array_data": array_representation
     }), 200
-    
 @app.route('/reports')
 def reports():
-    all_reports = db.get_all_reports() or []
+    all_reports = db.get_all_report_files() or []
     return render_template('reports/list.html', reports=all_reports, now=datetime.now())
-
-@app.route('/reports/<file_id>')
-def view_report(file_id):
-    file_text = db.get_file_text(file_id)
-    report = next((r for r in db.get_all_reports() if r['file_id'] == file_id), None)
-    if not report:
-        return redirect(url_for('reports'))
-    return render_template('reports/view.html', report=report, content=file_text)
-
 
 @app.route('/reports/generate', methods=['GET', 'POST'])
 def generate_report():
+    """Página para generar nuevos reportes"""
     if request.method == 'POST':
         natural_request = request.form.get('natural_request', '')
         improved_prompt = request.form.get('improved_prompt', '')
@@ -174,11 +195,122 @@ def generate_report():
             # Generar reporte
             try:
                 result = generate_amc_report(instance_id, sql_query)
+                
+                if not result.get('error') and result.get('downloadUrls'):
+                    # Procesar y guardar archivos CSV
+                    report_id = result.get('workflowExecutionId', str(uuid.uuid4()))
+                    saved_files = []
+                    
+                    for url in result.get('downloadUrls', []):
+                        if url.lower().endswith('.csv') or 'csv' in url.lower():
+                            logger.info(f"Procesando archivo CSV: {url}")
+                            
+                            # Descargar y procesar el archivo
+                            csv_data = download_and_process_csv(url)
+                            
+                            if csv_data:
+                                # Generar nombre de archivo
+                                filename = extract_filename_from_url(url)
+                                if not filename.startswith('amc_report_'):
+                                    now = datetime.now()
+                                    date_str = now.strftime('%Y%m%d_%H%M%S')
+                                    filename = f'amc_report_{date_str}.csv'
+                                
+                                # Guardar en la base de datos
+                                file_id = db.save_report_file(
+                                    report_id=report_id,
+                                    file_name=filename,
+                                    file_content=csv_data['content'],
+                                    download_url=url
+                                )
+                                
+                                if file_id:
+                                    saved_files.append({
+                                        'file_id': file_id,
+                                        'filename': filename,
+                                        'rows': csv_data['rows'],
+                                        'size_bytes': csv_data['size_bytes']
+                                    })
+                                    logger.info(f"Archivo guardado en BD: {filename} ({csv_data['rows']} filas)")
+                                else:
+                                    logger.error(f"Error al guardar archivo en BD: {filename}")
+                    
+                    # Agregar información de archivos guardados al resultado
+                    result['saved_files'] = saved_files
+                    result['report_id'] = report_id
+                
                 return jsonify(result)
             except Exception as e:
+                logger.error(f"Error en generación de reporte: {str(e)}")
                 return jsonify({'error': True, 'message': str(e)}), 500
                 
     return render_template('reports/generate.html')
+
+
+@app.route('/reports/<file_id>/delete', methods=['POST'])
+def delete_report(file_id):
+    """Elimina un reporte específico"""
+    try:
+        success = db.delete_report_file(file_id)
+        if success:
+            flash('Reporte eliminado exitosamente', 'success')
+        else:
+            flash('No se pudo eliminar el reporte', 'error')
+    except Exception as e:
+        logger.error(f"Error al eliminar reporte: {str(e)}")
+        flash('Error interno al eliminar el reporte', 'error')
+    
+    return redirect(url_for('reports'))
+
+@app.route('/reports/files/<file_id>/download')
+def download_saved_file(file_id):
+    """Descarga un archivo CSV guardado en la base de datos"""
+    try:
+        # Obtener información del archivo
+        file_info = db.get_report_file_info(file_id)
+        if not file_info:
+            return "Archivo no encontrado", 404
+        
+        # Obtener el contenido
+        content = db.get_report_file_content(file_id)
+        if not content:
+            return "Contenido no encontrado", 404
+        
+        # Crear respuesta con el archivo
+        from flask import Response
+        return Response(
+            content,
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename={file_info["file_name"]}'
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error al descargar archivo: {str(e)}")
+        return "Error interno del servidor", 500
+
+@app.route('/reports/<file_id>')
+def view_report(file_id):
+    """Ver un reporte específico"""
+    # Obtener información del archivo
+    report_info = db.get_report_file_info(file_id)
+    if not report_info:
+        flash('Reporte no encontrado', 'error')
+        return redirect(url_for('reports'))
+    
+    # Obtener contenido del archivo
+    file_content = db.get_report_file_content(file_id)
+    
+    # Parsear CSV si hay contenido
+    csv_data = None
+    if file_content:
+        csv_data = parse_csv_content(file_content, max_rows=100)
+    
+    return render_template('reports/view.html', 
+                         report=report_info, 
+                         content=file_content,
+                         csv_data=csv_data)
+
 
 # Rutas para el historial de chat
 @app.route('/chat/history')

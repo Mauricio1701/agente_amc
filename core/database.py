@@ -84,7 +84,7 @@ class Database:
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """)
                 conn.commit()
-
+            
             if 'agent_knowledge' not in existing_tables:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS agent_knowledge (
@@ -128,6 +128,22 @@ class Database:
                         last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
                         INDEX idx_last_updated (last_updated)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """)
+                conn.commit()
+            
+            if 'report_files' not in existing_tables:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS report_files (
+                        file_id VARCHAR(36) PRIMARY KEY,
+                        report_id VARCHAR(100) NOT NULL,
+                        file_name VARCHAR(255) NOT NULL,
+                        file_content LONGTEXT NOT NULL,
+                        file_size INT DEFAULT 0,
+                        download_url TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_report_id (report_id),
+                        INDEX idx_created_at (created_at)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """)
                 conn.commit()
@@ -540,6 +556,166 @@ class Database:
         except Error as e:
             print(f"Error al limpiar historial: {e}")
             return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+    
+    def save_report_file(self, report_id: str, file_name: str, file_content: str, download_url: str = None) -> str:
+        """Guarda un archivo CSV de reporte en la base de datos"""
+        conn = None
+        cursor = None
+        try:
+            file_id = str(uuid.uuid4())
+            file_size = len(file_content.encode('utf-8'))
+            
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO report_files (file_id, report_id, file_name, file_content, file_size, download_url)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (file_id, report_id, file_name, file_content, file_size, download_url))
+            conn.commit()
+            return file_id
+        except Exception as e:
+            print(f"Error al guardar archivo de reporte: {str(e)}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+                
+    def get_all_report_files(self) -> List[Dict]:
+        """Obtiene todos los archivos de reportes guardados"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT file_id, report_id, file_name, file_size, download_url, created_at
+                FROM report_files 
+                ORDER BY created_at DESC
+            """)
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Error al obtener archivos de reporte: {str(e)}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+    
+    def get_report_file_info(self, file_id: str) -> Optional[Dict]:
+        """Obtiene información completa de un archivo de reporte"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT file_id, report_id, file_name, file_size, download_url, created_at
+                FROM report_files 
+                WHERE file_id = %s
+            """, (file_id,))
+            return cursor.fetchone()
+        except Exception as e:
+            print(f"Error al obtener información del archivo: {str(e)}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+
+    def get_report_files(self, report_id: str) -> List[Dict]:
+        """Obtiene todos los archivos de un reporte específico"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT file_id, report_id, file_name, file_size, download_url, created_at
+                FROM report_files 
+                WHERE report_id = %s
+                ORDER BY created_at DESC
+            """, (report_id,))
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Error al obtener archivos de reporte: {str(e)}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+    def delete_report_file(self, file_id: str) -> bool:
+        """Elimina un archivo de reporte"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM report_files 
+                WHERE file_id = %s
+            """, (file_id,))
+            conn.commit()
+            deleted = cursor.rowcount > 0
+            return deleted
+        except Exception as e:
+            print(f"Error al eliminar archivo de reporte: {str(e)}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+
+    def get_report_file_content(self, file_id: str) -> Optional[str]:
+        """Obtiene el contenido de un archivo específico"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT file_content FROM report_files 
+                WHERE file_id = %s
+            """, (file_id,))
+            result = cursor.fetchone()
+            return result['file_content'] if result else None
+        except Exception as e:
+            print(f"Error al obtener contenido del archivo: {str(e)}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn and conn.is_connected():
+                conn.close()
+            
+    def get_report_file_by_id(self, file_id: str) -> Optional[Dict]:
+        """Obtiene un archivo de reporte específico por su ID"""
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT file_id, report_id, file_name, file_size, download_url, created_at,
+                    LENGTH(file_content) as content_length
+                FROM report_files 
+                WHERE file_id = %s
+            """, (file_id,))
+            result = cursor.fetchone()
+            return result
+        except Exception as e:
+            print(f"Error al obtener archivo por ID: {str(e)}")
+            return None
         finally:
             if cursor:
                 cursor.close()

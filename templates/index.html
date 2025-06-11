@@ -90,15 +90,6 @@
         margin-left: auto;
     }
 
-    .ai-message {
-        justify-content: flex-start;
-    }
-
-    .ai-message .message-content {
-        background-color: var(--content-bg);
-        border-bottom-left-radius: 0;
-        margin-right: auto;
-    }
 
     .system-message {
         text-align: center;
@@ -479,6 +470,57 @@
     .btn-save-chat i {
         margin-right: 0.25rem;
     }
+
+    .ai-message {
+        position: relative;
+        justify-content: flex-start;
+    }
+
+    .ai-message .message-content {
+        background-color: var(--content-bg);
+        border-bottom-left-radius: 0;
+        margin-right: auto;
+        margin-bottom: 8px;
+        /* Espacio para el botón */
+        position: relative;
+    }
+
+    .copy-button {
+        position: absolute;
+        bottom: -25px;
+        /* Posicionarlo fuera del globo */
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 2px 6px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 10px;
+        opacity: 0;
+        transition: all 0.2s ease;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .ai-message:hover .copy-button {
+        opacity: 0.9;
+    }
+
+    .copy-button:hover {
+        opacity: 1 !important;
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.05);
+    }
+
+    .copy-button.copied {
+        background: var(--accent-color);
+        opacity: 1 !important;
+        color: white;
+    }
 </style>
 
 {% endblock %}
@@ -819,7 +861,37 @@
                 });
         }
 
-        // Función para añadir mensaje al chat
+        function addCopyButtonsToExistingMessages() {
+            const existingAiMessages = document.querySelectorAll('.ai-message .message-content');
+
+            existingAiMessages.forEach(messageContent => {
+                // Verificar si ya tiene botón de copia
+                if (!messageContent.querySelector('.copy-button')) {
+                    const copyButton = document.createElement('button');
+                    copyButton.className = 'copy-button';
+                    copyButton.innerHTML = '<i class="bi bi-clipboard"></i> Copiar';
+                    copyButton.title = 'Copiar respuesta';
+
+                    // Obtener el texto del mensaje (sin HTML)
+                    const messageText = messageContent.innerText || messageContent.textContent;
+
+                    // Agregar funcionalidad de copia
+                    copyButton.addEventListener('click', function () {
+                        copyToClipboard(messageText, copyButton);
+                    });
+
+                    // Agregar posición relativa al contenido y añadir botón
+                    messageContent.style.position = 'relative';
+                    messageContent.appendChild(copyButton);
+                }
+            });
+        }
+
+        // Llamar a la función para agregar botones a mensajes existentes
+        addCopyButtonsToExistingMessages();
+
+        // ...resto de código existente...
+
         function appendMessage(type, content) {
             const messageRow = document.createElement('div');
             messageRow.className = `message-row ${type}-message`;
@@ -836,13 +908,13 @@
                 '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
             );
 
-            // Formatear bloques de código
+            // Formatear bloques de código - CORREGIDO
             const codeBlockPattern = /```([a-z]*)\n([\s\S]*?)```/g;
             formattedContent = formattedContent.replace(codeBlockPattern, function (match, lang, code) {
                 return `<pre><code class="${lang}">${code.trim()}</code></pre>`;
             });
 
-            // Formatear líneas de código en línea
+            // Formatear líneas de código en línea - CORREGIDO
             const inlineCodePattern = /`([^`]+)`/g;
             formattedContent = formattedContent.replace(inlineCodePattern, '<code>$1</code>');
 
@@ -850,12 +922,86 @@
             formattedContent = formattedContent.replace(/\n/g, '<br>');
 
             messageContent.innerHTML = formattedContent;
+
+            // Agregar botón de copia solo para mensajes del AI
+            if (type === 'ai') {
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.innerHTML = '<i class="bi bi-clipboard"></i> Copiar';
+                copyButton.title = 'Copiar respuesta';
+
+                // Agregar funcionalidad de copia
+                copyButton.addEventListener('click', function () {
+                    copyToClipboard(content, copyButton);
+                });
+
+                // Agregar el botón AL CONTENIDO del mensaje
+                messageContent.style.position = 'relative';
+                messageContent.appendChild(copyButton);
+            }
+
             messageRow.appendChild(messageContent);
             chatMessages.appendChild(messageRow);
 
             if (chatMessages.children.length > 0) {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
+        }
+
+        function copyToClipboard(text, button) {
+            // Usar la API moderna del portapapeles si está disponible
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function () {
+                    showCopySuccess(button);
+                }).catch(function (err) {
+                    console.error('Error al copiar: ', err);
+                    fallbackCopyTextToClipboard(text, button);
+                });
+            } else {
+                // Fallback para navegadores más antiguos
+                fallbackCopyTextToClipboard(text, button);
+            }
+        }
+
+        // Función fallback para copiar texto
+        function fallbackCopyTextToClipboard(text, button) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            // Hacer el textarea invisible
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(button);
+                } else {
+                    console.error('Fallback: No se pudo copiar');
+                }
+            } catch (err) {
+                console.error('Fallback: Error al copiar', err);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // Mostrar feedback visual de copia exitosa
+        function showCopySuccess(button) {
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i> Copiado';
+            button.classList.add('copied');
+
+            setTimeout(() => {
+                button.innerHTML = originalContent;
+                button.classList.remove('copied');
+            }, 2000);
         }
 
         // Mostrar indicador de carga
@@ -1010,8 +1156,9 @@
                 } else {
                     console.log('Chat guardado exitosamente:', data);
 
-                    // Mostrar los datos del array en la consola de manera formateada
-                    console.log('===== ARRAY DE CHAT =====');
+                    console.log('===== CHAT HISTORY =====');
+                    console.table(data.chat_history);
+                    console.log('===== ARRAY DATA =====');
                     console.table(data.array_data);
                     console.log('========================');
 

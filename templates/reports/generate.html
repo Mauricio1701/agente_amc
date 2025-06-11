@@ -673,7 +673,6 @@
             reportError.classList.remove('d-none');
         }
 
-        // Función para mostrar resultados
         function showResult(data) {
             reportError.classList.add('d-none');
             reportResult.classList.remove('d-none');
@@ -681,36 +680,56 @@
             resultSummary.innerHTML = `
         <p style="color: var(--text-color);">Se ha generado su reporte satisfactoriamente.</p>
         <p style="color: var(--muted-text);">Fecha/Hora: ${new Date().toLocaleString()}</p>
+        ${data.report_id ? `<p style="color: var(--muted-text);">ID del Reporte: ${data.report_id}</p>` : ''}
     `;
 
             downloadLinks.innerHTML = '';
 
+            // Mostrar archivos guardados en la base de datos
+            if (data.saved_files && data.saved_files.length > 0) {
+                const savedFilesHtml = data.saved_files.map(file => `
+            <div class="mb-2 p-2 border rounded" style="border-color: var(--border-color);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong style="color: var(--text-color);">${file.filename}</strong>
+                        <small class="text-muted d-block">${file.rows} filas • ${(file.size_bytes / 1024).toFixed(1)} KB</small>
+                    </div>
+                    <a href="/reports/files/${file.file_id}/download" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-download me-1"></i>Descargar
+                    </a>
+                </div>
+            </div>
+        `).join('');
+
+                downloadLinks.innerHTML = `
+            <h6 style="color: var(--text-color);">Archivos Guardados:</h6>
+            ${savedFilesHtml}
+        `;
+            }
+
+            // Mostrar enlaces originales como respaldo
             if (data.downloadUrls && data.downloadUrls.length > 0) {
-                // Crear nombre de archivo con formato amc_report_fechahora
-                const now = new Date();
-                const dateTimeStr = now.toISOString().replace(/[:.]/g, '-').replace('T', '_').substring(0, 19);
-                const fileName = `amc_report_${dateTimeStr}`;
-
-                const linksHtml = data.downloadUrls.map((url, index) => {
-                    // Extraer la extensión del archivo de la URL
-                    const fileExtension = url.split('.').pop().split('?')[0]; // Obtiene la extensión antes de parámetros de URL
-                    const downloadFileName = `${fileName}${index > 0 ? '_' + (index + 1) : ''}.${fileExtension}`;
-
+                const originalLinksHtml = data.downloadUrls.map((url, index) => {
+                    const fileExtension = url.split('.').pop().split('?')[0];
                     return `
-                <a href="${url}" download="${downloadFileName}" class="btn btn-outline-secondary mb-2">
-                    <i class="bi bi-download me-1"></i>Descargar ${fileExtension.toUpperCase()} (${downloadFileName})
+                <a href="${url}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-link-45deg me-1"></i>Enlace Original ${index + 1}
                 </a>
             `;
                 }).join(' ');
 
-                downloadLinks.innerHTML = `
-            <h6 style="color: var(--text-color);">Enlaces de Descarga:</h6>
+                downloadLinks.innerHTML += `
+            <hr style="border-color: var(--border-color); margin: 1rem 0;">
+            <h6 style="color: var(--text-color);">Enlaces Temporales:</h6>
             <div class="d-flex flex-wrap gap-2">
-                ${linksHtml}
+                ${originalLinksHtml}
             </div>
+            <small class="text-muted">Nota: Los enlaces temporales expiran después de un tiempo</small>
         `;
-            } else {
-                downloadLinks.innerHTML = '<div class="alert alert-warning">No hay enlaces de descarga disponibles para este reporte.</div>';
+            }
+
+            if (!data.saved_files?.length && !data.downloadUrls?.length) {
+                downloadLinks.innerHTML = '<div class="alert alert-warning">No hay archivos disponibles para este reporte.</div>';
             }
         }
 

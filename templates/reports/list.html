@@ -11,7 +11,7 @@
         background-color: var(--secondary-bg);
         padding: 1.5rem;
     }
-    
+
     /* Encabezado de reportes */
     .reports-header {
         display: flex;
@@ -19,7 +19,7 @@
         align-items: center;
         margin-bottom: 1.5rem;
     }
-    
+
     .reports-header h3 {
         color: var(--text-color);
         margin: 0;
@@ -27,18 +27,18 @@
         display: flex;
         align-items: center;
     }
-    
+
     .reports-header h3 i {
         color: var(--accent-color);
         margin-right: 0.5rem;
     }
-    
+
     .reports-header p {
         color: var(--muted-text);
         margin-top: 0.25rem;
         font-size: 0.875rem;
     }
-    
+
     .btn-new-report {
         background-color: #28a745;
         color: white;
@@ -52,16 +52,16 @@
         display: inline-flex;
         align-items: center;
     }
-    
+
     .btn-new-report:hover {
         background-color: #218838;
         color: white;
     }
-    
+
     .btn-new-report i {
         margin-right: 0.5rem;
     }
-    
+
     /* Tabla de reportes */
     .reports-card {
         background-color: var(--content-bg);
@@ -69,86 +69,86 @@
         overflow: hidden;
         border: 1px solid var(--border-color);
     }
-    
+
     .reports-table {
         width: 100%;
         margin-bottom: 0;
         color: var(--text-color);
         border-collapse: collapse;
     }
-    
+
     .reports-table th {
-        background-color: rgba(0,0,0,0.1);
+        background-color: rgba(0, 0, 0, 0.1);
         color: var(--text-color);
         border-bottom: 1px solid var(--border-color);
         padding: 1rem;
         text-align: left;
         font-weight: 600;
     }
-    
+
     .reports-table td {
         padding: 1rem;
         border-bottom: 1px solid var(--border-color);
         vertical-align: middle;
     }
-    
+
     .reports-table tr:hover {
-        background-color: rgba(255,255,255,0.05);
+        background-color: rgba(255, 255, 255, 0.05);
     }
-    
+
     .reports-table tr:last-child td {
         border-bottom: none;
     }
-    
+
     .file-info {
         display: flex;
         align-items: center;
     }
-    
+
     .file-icon {
         color: #28a745;
         font-size: 1.25rem;
         margin-right: 0.75rem;
         display: flex;
     }
-    
+
     .file-details {
         display: flex;
         flex-direction: column;
     }
-    
+
     .file-name {
         color: var(--text-color);
     }
-    
+
     .file-id {
         color: var(--muted-text);
         font-size: 0.75rem;
         margin-top: 0.25rem;
     }
-    
+
     .date-info {
         display: flex;
         flex-direction: column;
     }
-    
+
     .date {
         color: var(--text-color);
     }
-    
+
     .days-ago {
         color: var(--muted-text);
         font-size: 0.75rem;
         margin-top: 0.25rem;
     }
-    
+
     /* Acciones de tabla */
     .action-buttons {
         display: flex;
         justify-content: center;
         gap: 0.5rem;
     }
-    
+
     .btn-action-sm {
         display: inline-flex;
         align-items: center;
@@ -161,50 +161,50 @@
         cursor: pointer;
         transition: all 0.2s;
     }
-    
+
     .btn-view {
         color: var(--accent-color);
         border-color: var(--accent-color);
     }
-    
+
     .btn-view:hover {
         background-color: var(--accent-color);
         color: var(--primary-bg);
     }
-    
+
     .btn-delete {
         color: #dc3545;
         border-color: #dc3545;
     }
-    
+
     .btn-delete:hover {
         background-color: #dc3545;
         color: var(--primary-bg);
     }
-    
+
     /* Estado vacío */
     .empty-state {
         padding: 3rem 2rem;
         text-align: center;
     }
-    
+
     .empty-icon {
         font-size: 4rem;
         color: var(--border-color);
         margin-bottom: 1.5rem;
     }
-    
+
     .empty-title {
         color: var(--muted-text);
         font-weight: 500;
         margin-bottom: 0.5rem;
     }
-    
+
     .empty-description {
         color: var(--muted-text);
         margin-bottom: 1.5rem;
     }
-    
+
     /* Modal */
     .modal-content {
         background-color: var(--content-bg);
@@ -212,28 +212,28 @@
         color: var(--text-color);
         border-radius: 0.75rem;
     }
-    
+
     .modal-header {
         border-bottom-color: var(--border-color);
         padding: 1rem;
     }
-    
+
     .modal-body {
         padding: 1.5rem;
         text-align: center;
     }
-    
+
     .warning-icon {
         color: #ffc107;
         font-size: 3rem;
         margin-bottom: 1rem;
     }
-    
+
     .modal-footer {
         border-top-color: var(--border-color);
         padding: 1rem;
     }
-    
+
     .btn-modal {
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
@@ -243,31 +243,31 @@
         border: 1px solid;
         cursor: pointer;
     }
-    
+
     .btn-cancel {
         color: var(--text-color);
         border-color: var(--border-color);
     }
-    
+
     .btn-cancel:hover {
         background-color: var(--hover-bg);
     }
-    
+
     .btn-danger {
         color: white;
         background-color: #dc3545;
         border-color: #dc3545;
     }
-    
+
     .btn-danger:hover {
         background-color: #bb2d3b;
         border-color: #bb2d3b;
     }
-    
+
     .danger-text {
         color: #dc3545;
     }
-    
+
     /* Utilidades */
     .fw-bold {
         font-weight: 600;
@@ -290,70 +290,93 @@
 
     <div class="reports-card">
         {% if reports %}
-            <div class="table-responsive">
-                <table class="reports-table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Fecha de Creación</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in reports %}
-                            <tr>
-                                <td>
-                                    <div class="file-info">
-                                        <div class="file-icon">
-                                            <i class="bi bi-file-earmark-spreadsheet"></i>
-                                        </div>
-                                        <div class="file-details">
-                                            <div class="file-name">{{ report.file_name }}</div>
-                                            <div class="file-id">ID: {{ report.file_id[:8] }}...</div>
-                                        </div>
+        <div class="table-responsive">
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Fecha de Creación</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>
+                            <div class="file-info">
+                                <div class="file-icon">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                </div>
+                                <div class="file-details">
+                                    <div class="file-name">{{ report.file_name }}</div>
+                                    <div class="file-id">
+                                        ID: {{ report.file_id[:8] }}... |
+                                        Reporte: {{ report.report_id[:8] }}... |
+                                        Tamaño: {{ (report.file_size / 1024) | round(1) }} KB
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="date-info">
-                                        <div class="date">{{ report.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-                                        <div class="days-ago">{{ (report.timestamp.date() - now.date()).days }} días atrás</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{{ url_for('view_report', file_id=report.file_id) }}" class="btn-action-sm btn-view" title="Ver Reporte">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="date-info">
+                                <div class="date">{{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                                {% set days_diff = (now - report.created_at).days %}
+                                <div class="days-ago">
+                                    {% if days_diff == 0 %}
+                                    Hoy
+                                    {% elif days_diff == 1 %}
+                                    Ayer
+                                    {% else %}
+                                    Hace {{ days_diff }} días
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('view_report', file_id=report.file_id) }}"
+                                    class="btn-action-sm btn-view" title="Ver Reporte">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('download_saved_file', file_id=report.file_id) }}"
+                                    class="btn-action-sm btn-view" title="Descargar CSV"
+                                    style="border-color: #28a745; color: #28a745;">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <button class="btn-action-sm btn-delete delete-btn" data-file-id="{{ report.file_id }}"
+                                    data-file-name="{{ report.file_name }}" title="Eliminar Reporte">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
         {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="bi bi-file-earmark-excel"></i>
-                </div>
-                <h4 class="empty-title">No hay reportes disponibles</h4>
-                <p class="empty-description">Genera un nuevo reporte para comenzar</p>
-                <a href="{{ url_for('generate_report') }}" class="btn-new-report">
-                    <i class="bi bi-plus-circle"></i>Crear Primer Reporte
-                </a>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-file-earmark-excel"></i>
             </div>
+            <h4 class="empty-title">No hay reportes disponibles</h4>
+            <p class="empty-description">Genera un nuevo reporte para comenzar</p>
+            <a href="{{ url_for('generate_report') }}" class="btn-new-report">
+                <i class="bi bi-plus-circle"></i>Crear Primer Reporte
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>
-
-<!-- Modal de confirmación para eliminar -->
+<!-- Modal de confirmación para eliminar - CORREGIDO -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Confirmar eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="warning-icon">
@@ -364,7 +387,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-modal btn-cancel" data-bs-dismiss="modal">Cancelar</button>
-                
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn-modal btn-danger">Eliminar</button>
+                </form>
             </div>
         </div>
     </div>
@@ -373,20 +398,21 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         const reportNameElement = document.getElementById('reportName');
-        const reportIdInput = document.getElementById('reportId');
-        
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+
         deleteButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
+            button.addEventListener('click', function (e) {
                 e.preventDefault();
                 const fileId = this.getAttribute('data-file-id');
                 const fileName = this.getAttribute('data-file-name');
-                
+
                 reportNameElement.textContent = fileName;
-                reportIdInput.value = fileId;
-                
+                deleteForm.action = `/reports/${fileId}/delete`;
+
                 deleteModal.show();
             });
         });

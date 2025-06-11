@@ -3,6 +3,7 @@
 {% block title %}Reporte: {{ report.file_name }}{% endblock %}
 
 {% block extra_css %}
+<!-- ...existing styles... -->
 <style>
     /* Contenedor principal */
     .content-container {
@@ -11,7 +12,7 @@
         background-color: var(--secondary-bg);
         padding: 1.5rem;
     }
-    
+
     /* Encabezado del reporte */
     .report-header {
         display: flex;
@@ -19,19 +20,19 @@
         align-items: center;
         margin-bottom: 1.5rem;
     }
-    
+
     .report-header h3 {
         color: var(--text-color);
         margin: 0;
         font-weight: 500;
     }
-    
+
     .report-header-meta {
         color: var(--muted-text);
         margin-top: 0.25rem;
         font-size: 0.875rem;
     }
-    
+
     .btn-action {
         background-color: var(--accent-color);
         color: var(--primary-bg);
@@ -45,40 +46,40 @@
         display: inline-flex;
         align-items: center;
     }
-    
+
     .btn-action:hover {
         background-color: var(--primary-color-dark);
         color: var(--primary-bg);
     }
-    
+
     .btn-action i {
         margin-right: 0.5rem;
     }
-    
+
     .btn-outline {
         background-color: transparent;
         color: var(--text-color);
         border: 1px solid var(--border-color);
     }
-    
+
     .btn-outline:hover {
         background-color: var(--hover-bg);
         color: var(--text-color);
     }
-    
+
     /* Layout de dos columnas */
     .report-layout {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
         gap: 1.5rem;
     }
-    
+
     @media (max-width: 992px) {
         .report-layout {
             grid-template-columns: 1fr;
         }
     }
-    
+
     /* Tarjetas de información */
     .info-card {
         background-color: var(--content-bg);
@@ -87,13 +88,13 @@
         border: 1px solid var(--border-color);
         margin-bottom: 1.5rem;
     }
-    
+
     .info-card-header {
         padding: 1rem;
-        background-color: rgba(0,0,0,0.1);
+        background-color: rgba(0, 0, 0, 0.1);
         border-bottom: 1px solid var(--border-color);
     }
-    
+
     .info-card-header h5 {
         margin: 0;
         color: var(--text-color);
@@ -101,32 +102,33 @@
         display: flex;
         align-items: center;
     }
-    
+
     .info-card-header h5 i {
         color: var(--accent-color);
         margin-right: 0.5rem;
     }
-    
+
     .info-card-body {
         padding: 1rem;
     }
-    
+
     /* Metadatos */
     .metadata-item {
         display: flex;
         margin-bottom: 0.75rem;
     }
-    
+
     .metadata-label {
         min-width: 120px;
         font-weight: 500;
         color: var(--muted-text);
     }
-    
+
     .metadata-value {
         color: var(--text-color);
+        word-break: break-all;
     }
-    
+
     /* Botones de acción rápida */
     .action-btn {
         display: block;
@@ -143,20 +145,20 @@
         cursor: pointer;
         transition: all 0.2s;
     }
-    
+
     .action-btn:last-child {
         margin-bottom: 0;
     }
-    
+
     .action-btn:hover {
         background-color: var(--hover-bg);
     }
-    
+
     .action-btn i {
         margin-right: 0.75rem;
         color: var(--accent-color);
     }
-    
+
     /* Contenedor de reportes */
     .report-container {
         max-height: 75vh;
@@ -165,19 +167,20 @@
         background-color: var(--content-bg);
         border: 1px solid var(--border-color);
     }
-    
+
     .table-wrapper {
         overflow-x: auto;
     }
-    
+
     /* Tabla de datos */
     .csv-table {
         width: 100%;
         margin-bottom: 0;
         color: var(--text-color);
         border-collapse: collapse;
+        font-size: 0.9rem;
     }
-    
+
     .csv-table th {
         position: sticky;
         top: 0;
@@ -188,18 +191,50 @@
         text-align: left;
         font-weight: 600;
         box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        min-width: 120px;
     }
-    
+
     .csv-table td {
         padding: 0.75rem;
         border-bottom: 1px solid var(--border-color);
         vertical-align: top;
+        word-wrap: break-word;
+        max-width: 200px;
     }
-    
+
+    .csv-table tr:nth-child(even) {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
     .csv-table tr:hover {
         background-color: rgba(255, 255, 255, 0.05);
     }
-    
+
+    /* Contenedor con scroll horizontal mejorado */
+    .table-wrapper {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+        background: var(--secondary-bg);
+        border-radius: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-color);
+    }
+
     /* Datos crudos */
     .report-data {
         font-family: 'Consolas', 'Courier New', monospace;
@@ -208,45 +243,45 @@
         padding: 1rem;
         color: var(--text-color);
     }
-    
+
     /* Alerts */
     .alert {
         padding: 1rem;
         border-radius: 0.5rem;
         margin: 1rem 0;
     }
-    
+
     .alert-info {
         background-color: rgba(13, 202, 240, 0.15);
         border: 1px solid rgba(13, 202, 240, 0.3);
         color: #0dcaf0;
     }
-    
+
     .alert-warning {
         background-color: rgba(255, 193, 7, 0.15);
         border: 1px solid rgba(255, 193, 7, 0.3);
         color: #ffc107;
     }
-    
+
     .alert i {
         margin-right: 0.5rem;
     }
-    
+
     /* Dropdown */
     .dropdown {
         position: relative;
         display: inline-block;
     }
-    
+
     .dropdown-toggle {
         display: inline-flex;
         align-items: center;
     }
-    
+
     .dropdown-toggle::after {
         margin-left: 0.5rem;
     }
-    
+
     .dropdown-menu {
         position: absolute;
         right: 0;
@@ -260,11 +295,11 @@
         margin-top: 0.25rem;
         display: none;
     }
-    
+
     .dropdown-menu.show {
         display: block;
     }
-    
+
     .dropdown-item {
         display: flex;
         align-items: center;
@@ -272,26 +307,27 @@
         color: var(--text-color);
         text-decoration: none;
     }
-    
+
     .dropdown-item:hover {
         background-color: var(--hover-bg);
     }
-    
+
     .dropdown-item i {
         margin-right: 0.5rem;
         width: 1rem;
         text-align: center;
     }
-    
+
     .dropdown-divider {
         border-top: 1px solid var(--border-color);
         margin: 0.5rem 0;
     }
-    
-    .text-danger, .dropdown-item.text-danger {
+
+    .text-danger,
+    .dropdown-item.text-danger {
         color: #dc3545 !important;
     }
-    
+
     /* Modal */
     .modal-content {
         background-color: var(--content-bg);
@@ -299,30 +335,30 @@
         color: var(--text-color);
         border-radius: 0.75rem;
     }
-    
+
     .modal-header {
         border-bottom-color: var(--border-color);
         padding: 1rem;
     }
-    
+
     .modal-body {
         padding: 1.5rem;
     }
-    
+
     .modal-footer {
         border-top-color: var(--border-color);
         padding: 1rem;
     }
-    
+
     .btn-close {
         color: var(--text-color);
         opacity: 0.7;
     }
-    
+
     .btn-close:hover {
         opacity: 1;
     }
-    
+
     /* Spinner */
     .spinner-border {
         display: inline-block;
@@ -333,16 +369,18 @@
         border-radius: 50%;
         animation: spinner-border 0.75s linear infinite;
     }
-    
+
     @keyframes spinner-border {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
-    
+
     /* Utils */
     .text-center {
         text-align: center;
     }
-    
+
     .mb-3 {
         margin-bottom: 1rem;
     }
@@ -357,7 +395,7 @@
             <h3>{{ report.file_name }}</h3>
             <div class="report-header-meta">
                 <i class="bi bi-calendar3 me-1"></i>
-                Creado: {{ report.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                Creado: {{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
             </div>
         </div>
         <div style="display: flex; gap: 0.5rem;">
@@ -369,14 +407,16 @@
                     <i class="bi bi-gear"></i>Acciones
                 </button>
                 <div class="dropdown-menu" id="actionsDropdown">
-                    <a class="dropdown-item" href="#" id="downloadCsv">
+                    <a class="dropdown-item" href="{{ url_for('download_saved_file', file_id=report.file_id) }}">
                         <i class="bi bi-download"></i>Descargar CSV
                     </a>
                     <a class="dropdown-item" href="#" id="copyToClipboard">
                         <i class="bi bi-clipboard"></i>Copiar al portapapeles
                     </a>
                     <div class="dropdown-divider"></div>
-                    
+                    <a class="dropdown-item text-danger" href="#" id="deleteReport">
+                        <i class="bi bi-trash"></i>Eliminar Reporte
+                    </a>
                 </div>
             </div>
         </div>
@@ -392,7 +432,11 @@
                 <div class="info-card-body">
                     <div class="metadata-item">
                         <span class="metadata-label">ID:</span>
-                        <span class="metadata-value">{{ report.file_id }}</span>
+                        <span class="metadata-value">{{ report.file_id[:8] }}...</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Reporte ID:</span>
+                        <span class="metadata-value">{{ report.report_id[:8] }}...</span>
                     </div>
                     <div class="metadata-item">
                         <span class="metadata-label">Nombre:</span>
@@ -400,32 +444,39 @@
                     </div>
                     <div class="metadata-item">
                         <span class="metadata-label">Fecha:</span>
-                        <span class="metadata-value">{{ report.timestamp.strftime('%Y-%m-%d') }}</span>
+                        <span class="metadata-value">{{ report.created_at.strftime('%Y-%m-%d') }}</span>
                     </div>
                     <div class="metadata-item">
                         <span class="metadata-label">Hora:</span>
-                        <span class="metadata-value">{{ report.timestamp.strftime('%H:%M:%S') }}</span>
+                        <span class="metadata-value">{{ report.created_at.strftime('%H:%M:%S') }}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Tamaño:</span>
+                        <span class="metadata-value">{{ (report.file_size / 1024) | round(1) }} KB</span>
                     </div>
                     <div class="metadata-item">
                         <span class="metadata-label">Tipo:</span>
                         <span class="metadata-value">CSV</span>
                     </div>
-                    {% if content %}
-                        {% set lines = content.strip().split('\n') %}
-                        <div class="metadata-item">
-                            <span class="metadata-label">Filas:</span>
-                            <span class="metadata-value">{{ lines|length - 1 }}</span>
-                        </div>
-                        {% if lines[0].split(',') %}
-                            <div class="metadata-item">
-                                <span class="metadata-label">Columnas:</span>
-                                <span class="metadata-value">{{ lines[0].split(',')|length }}</span>
-                            </div>
-                        {% endif %}
+                    {% if csv_data %}
+                    <div class="metadata-item">
+                        <span class="metadata-label">Filas:</span>
+                        <span class="metadata-value">{{ csv_data.total_rows }}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Columnas:</span>
+                        <span class="metadata-value">{{ csv_data.headers|length }}</span>
+                    </div>
+                    {% elif content %}
+                    {% set lines = content.strip().split('\n') %}
+                    <div class="metadata-item">
+                        <span class="metadata-label">Filas:</span>
+                        <span class="metadata-value">{{ lines|length - 1 }}</span>
+                    </div>
                     {% endif %}
                 </div>
             </div>
-            
+
             <div class="info-card">
                 <div class="info-card-header">
                     <h5><i class="bi bi-bar-chart"></i>Acciones rápidas</h5>
@@ -440,10 +491,13 @@
                     <button type="button" class="action-btn" id="visualize-btn">
                         <i class="bi bi-graph-up"></i>Visualizar Datos
                     </button>
+                    <button type="button" class="action-btn" id="chat-with-data">
+                        <i class="bi bi-chat-dots"></i>Chatear con Datos
+                    </button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Columna derecha: Contenido -->
         <div>
             <div class="info-card" style="margin-bottom: 0;">
@@ -451,45 +505,43 @@
                     <h5><i class="bi bi-table"></i>Contenido del Reporte</h5>
                 </div>
                 <div class="report-container">
-                    {% if content %}
-                        {% if content.startswith('"') and ',' in content %}
-                            <div class="table-wrapper">
-                                <table class="csv-table">
-                                    {% set lines = content.strip().split('\n') %}
-                                    {% set headers = lines[0].split(',') %}
-                                    <thead>
-                                        <tr>
-                                            {% for header in headers %}
-                                                <th>{{ header.strip('"') }}</th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for line in lines[1:100] %}
-                                            {% set cells = line.split(',') %}
-                                            <tr>
-                                                {% for cell in cells %}
-                                                    <td>{{ cell.strip('"') }}</td>
-                                                {% endfor %}
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% if lines|length > 101 %}
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle"></i>
-                                        Mostrando las primeras 100 filas de {{ lines|length - 1 }} totales.
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% else %}
-                            <div class="report-data">{{ content }}</div>
-                        {% endif %}
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Este reporte no tiene contenido disponible.
+                    {% if csv_data and csv_data.headers %}
+                    <div class="table-wrapper">
+                        <table class="csv-table">
+                            <thead>
+                                <tr>
+                                    {% for header in csv_data.headers %}
+                                    <th>{{ header }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in csv_data.rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                    <td>{{ cell if cell else '' }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if csv_data.has_more %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Mostrando {{ csv_data.showing_rows }} de {{ csv_data.total_rows }} filas totales.
+                            <a href="{{ url_for('download_saved_file', file_id=report.file_id) }}"
+                                class="alert-link">Descargar archivo completo</a>
                         </div>
+                        {% endif %}
+                    </div>
+                    {% elif content %}
+                    <!-- Fallback para contenido no-CSV -->
+                    <div class="report-data">{{ content }}</div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Este reporte no tiene contenido disponible.
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -518,19 +570,46 @@
     </div>
 </div>
 
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div style="font-size: 3rem; color: #dc3545; margin-bottom: 1rem;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <p>¿Estás seguro que deseas eliminar este reporte?</p>
+                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-action btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('delete_report', file_id=report.file_id) }}"
+                    style="display: inline;">
+                    <button type="submit" class="btn-action" style="background-color: #dc3545;">
+                        <i class="bi bi-trash"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Dropdown toggle
-        window.toggleDropdown = function() {
+        window.toggleDropdown = function () {
             const dropdown = document.getElementById('actionsDropdown');
             dropdown.classList.toggle('show');
         }
-        
+
         // Cerrar dropdown cuando se hace clic fuera
-        window.addEventListener('click', function(event) {
+        window.addEventListener('click', function (event) {
             if (!event.target.matches('.dropdown-toggle')) {
                 const dropdowns = document.getElementsByClassName('dropdown-menu');
                 for (let i = 0; i < dropdowns.length; i++) {
@@ -540,109 +619,138 @@
                 }
             }
         });
-        
 
-        
-        // Descargar como CSV
-        document.getElementById('downloadCsv').addEventListener('click', function(e) {
-            e.preventDefault();
-            const content = `{{ content|replace('\n', '\\n')|replace('"', '\\"')|safe }}`;
-            const blob = new Blob([content], {type: 'text/csv'});
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = '{{ report.file_name }}';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-        });
-        
         // Copiar al portapapeles
-        document.getElementById('copyToClipboard').addEventListener('click', function(e) {
+        document.getElementById('copyToClipboard').addEventListener('click', function (e) {
             e.preventDefault();
             const content = `{{ content|replace('\n', '\\n')|replace('"', '\\"')|safe }}`;
             navigator.clipboard.writeText(content).then(
-                function() {
+                function () {
                     alert('Contenido copiado al portapapeles');
-                }, 
-                function(err) {
+                },
+                function (err) {
                     alert('No se pudo copiar al portapapeles: ' + err);
                 }
             );
         });
-        
+
+        // Eliminar reporte
+        document.getElementById('deleteReport').addEventListener('click', function (e) {
+            e.preventDefault();
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        });
+
         // Analizar datos
-        document.getElementById('analyze-btn').addEventListener('click', function() {
+        document.getElementById('analyze-btn').addEventListener('click', function () {
             const analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
+            const modalTitle = document.querySelector('.modal-title');
+            modalTitle.textContent = 'Análisis de Datos';
             analysisModal.show();
-            
+
             document.getElementById('analysis-loading').style.display = 'block';
             document.getElementById('analysis-content').style.display = 'none';
-            
+
             // Simulación de análisis
-            setTimeout(function() {
+            setTimeout(function () {
                 document.getElementById('analysis-loading').style.display = 'none';
                 document.getElementById('analysis-content').style.display = 'block';
-                
+
+                {% if content %}
+                {% set lines = content.strip().split('\n') %}
                 document.getElementById('analysis-content').innerHTML = `
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        Esta funcionalidad está en desarrollo. En la versión final, aquí verás estadísticas y análisis avanzados sobre tus datos.
-                    </div>
-                    <div style="background-color: var(--secondary-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                        <h6 style="margin-bottom: 1rem; color: var(--text-color);">Estadísticas básicas</h6>
-                        <p>Nombre del archivo: <strong>{{ report.file_name }}</strong></p>
-                        <p>Total de registros: <strong>{{ content.strip().split('\n')|length - 1 }}</strong></p>
-                        <p>Campos: <strong>{{ content.strip().split('\n')[0].split(',')|length }}</strong></p>
-                    </div>
-                `;
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Análisis completado para el archivo: <strong>{{ report.file_name }}</strong>
+                        </div>
+                        <div style="background-color: var(--secondary-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <h6 style="margin-bottom: 1rem; color: var(--text-color);">📊 Estadísticas del Reporte</h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <div>
+                                    <strong>Total de registros:</strong><br>
+                                    <span style="font-size: 1.5rem; color: var(--accent-color);">{{ lines|length - 1 }}</span>
+                                </div>
+                                <div>
+                                    <strong>Número de campos:</strong><br>
+                                    <span style="font-size: 1.5rem; color: var(--accent-color);">{{ lines[0].split(',')|length if lines|length > 0 else 0 }}</span>
+                                </div>
+                                <div>
+                                    <strong>Tamaño del archivo:</strong><br>
+                                    <span style="font-size: 1.2rem; color: var(--accent-color);">{{ (report.file_size / 1024) | round(1) }} KB</span>
+                                </div>
+                                <div>
+                                    <strong>Fecha de creación:</strong><br>
+                                    <span style="color: var(--accent-color);">{{ report.created_at.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% if lines|length > 1 %}
+                        <div style="background-color: var(--secondary-bg); padding: 1rem; border-radius: 0.5rem;">
+                            <h6 style="margin-bottom: 1rem; color: var(--text-color);">📋 Estructura de datos</h6>
+                            <p><strong>Campos disponibles:</strong></p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for header in lines[0].split(',') %}
+                                <span style="background-color: var(--accent-color); color: var(--primary-bg); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">{{ header.strip('"') }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    `;
+                {% else %}
+                document.getElementById('analysis-content').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            No hay contenido disponible para analizar en este reporte.
+                        </div>
+                    `;
+                {% endif %}
             }, 1500);
         });
-        
-        // Funcionalidad para resumir contenido (simulada)
-        document.getElementById('summarize-btn').addEventListener('click', function() {
+
+        // Resumir contenido
+        document.getElementById('summarize-btn').addEventListener('click', function () {
             const analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
             const modalTitle = document.querySelector('.modal-title');
             modalTitle.textContent = 'Resumen del Contenido';
-            
+
             document.getElementById('analysis-loading').style.display = 'block';
             document.getElementById('analysis-content').style.display = 'none';
-            
+
             analysisModal.show();
-            
-            setTimeout(function() {
+
+            setTimeout(function () {
                 document.getElementById('analysis-loading').style.display = 'none';
                 document.getElementById('analysis-content').style.display = 'block';
-                
+
                 document.getElementById('analysis-content').innerHTML = `
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        Esta funcionalidad está en desarrollo. En la versión final, aquí verás un resumen detallado del contenido del reporte.
+                        Esta funcionalidad está en desarrollo. En la versión final, aquí verás un resumen inteligente del contenido del reporte.
                     </div>
                     <div style="background-color: var(--secondary-bg); padding: 1rem; border-radius: 0.5rem;">
-                        <h6 style="margin-bottom: 1rem; color: var(--text-color);">Resumen preliminar</h6>
-                        <p>El reporte contiene datos de ventas y métricas de anuncios en Amazon Marketing Cloud.</p>
+                        <h6 style="margin-bottom: 1rem; color: var(--text-color);">📄 Resumen preliminar</h6>
+                        <p>El reporte <strong>{{ report.file_name }}</strong> contiene datos de Amazon Marketing Cloud con información de campañas y métricas de rendimiento.</p>
+                        <p>Creado el {{ report.created_at.strftime('%d de %B de %Y') }} con un total de {{ content.strip().split('\n')|length - 1 if content else 0 }} registros.</p>
                     </div>
                 `;
             }, 1500);
         });
-        
-        // Funcionalidad para visualizar datos (simulada)
-        document.getElementById('visualize-btn').addEventListener('click', function() {
+
+        // Visualizar datos
+        document.getElementById('visualize-btn').addEventListener('click', function () {
             const analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
             const modalTitle = document.querySelector('.modal-title');
             modalTitle.textContent = 'Visualización de Datos';
-            
+
             document.getElementById('analysis-loading').style.display = 'block';
             document.getElementById('analysis-content').style.display = 'none';
-            
+
             analysisModal.show();
-            
-            setTimeout(function() {
+
+            setTimeout(function () {
                 document.getElementById('analysis-loading').style.display = 'none';
                 document.getElementById('analysis-content').style.display = 'block';
-                
+
                 document.getElementById('analysis-content').innerHTML = `
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
@@ -651,9 +759,16 @@
                     <div class="text-center">
                         <i class="bi bi-bar-chart-line" style="font-size: 5rem; color: var(--accent-color);"></i>
                         <p style="margin-top: 1rem;">Las visualizaciones estarán disponibles en próximas actualizaciones.</p>
+                        <p style="color: var(--muted-text);">Podrás crear gráficos de barras, líneas, pasteles y más basados en tus datos de AMC.</p>
                     </div>
                 `;
             }, 1500);
+        });
+
+        // Chatear con datos
+        document.getElementById('chat-with-data').addEventListener('click', function () {
+            // Redirigir al chat principal con contexto del archivo
+            window.location.href = '/?file_context={{ report.file_id }}';
         });
     });
 </script>
