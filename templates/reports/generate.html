@@ -11,7 +11,7 @@
         background-color: var(--secondary-bg);
         padding: 1.5rem;
     }
-    
+
     /* Estilos para el generador de reportes */
     .step-indicator {
         display: flex;
@@ -19,7 +19,7 @@
         margin-bottom: 30px;
         position: relative;
     }
-    
+
     .step-indicator::before {
         content: '';
         position: absolute;
@@ -30,14 +30,14 @@
         background-color: var(--border-color);
         z-index: 0;
     }
-    
+
     .step {
         position: relative;
         z-index: 1;
         text-align: center;
         width: 33%;
     }
-    
+
     .step-icon {
         width: 50px;
         height: 50px;
@@ -52,25 +52,25 @@
         color: var(--muted-text);
         transition: all 0.3s;
     }
-    
+
     .step.active .step-icon {
         background-color: var(--accent-color);
         border-color: var(--accent-color);
         color: var(--primary-bg);
     }
-    
+
     .step.completed .step-icon {
         background-color: #28a745;
         border-color: #28a745;
         color: var(--primary-bg);
     }
-    
+
     .step-label {
         color: var(--text-color);
         font-weight: 500;
         font-size: 0.9rem;
     }
-    
+
     .code-editor {
         font-family: 'Consolas', 'Courier New', monospace;
         font-size: 0.9rem;
@@ -80,7 +80,7 @@
         border-radius: 4px;
         color: var(--text-color);
     }
-    
+
     /* Card para el contenido principal */
     .content-card {
         background-color: var(--content-bg);
@@ -89,11 +89,11 @@
         overflow: hidden;
         margin-bottom: 1.5rem;
     }
-    
+
     .card-body {
         padding: 1.5rem;
     }
-    
+
     /* Formularios */
     .form-label {
         color: var(--text-color);
@@ -101,7 +101,7 @@
         margin-bottom: 0.5rem;
         display: block;
     }
-    
+
     .form-control {
         background-color: var(--primary-bg);
         border: 1px solid var(--border-color);
@@ -110,34 +110,34 @@
         padding: 0.75rem;
         transition: all 0.2s;
     }
-    
+
     .form-control:focus {
         background-color: var(--primary-bg);
         border-color: var(--accent-color);
         color: var(--text-color);
         box-shadow: 0 0 0 0.25rem rgba(101, 182, 250, 0.25);
     }
-    
+
     .input-group-text {
         background-color: var(--secondary-bg);
         border-color: var(--border-color);
         color: var(--muted-text);
     }
-    
+
     .form-check-input {
         background-color: var(--primary-bg);
         border-color: var(--border-color);
     }
-    
+
     .form-check-input:checked {
         background-color: var(--accent-color);
         border-color: var(--accent-color);
     }
-    
+
     .form-check-label {
         color: var(--text-color);
     }
-    
+
     /* Botones */
     .btn-primary {
         background-color: var(--accent-color);
@@ -147,12 +147,12 @@
         padding: 0.75rem 1rem;
         font-weight: 500;
     }
-    
+
     .btn-primary:hover {
         background-color: var(--primary-color-dark);
         border-color: var(--primary-color-dark);
     }
-    
+
     .btn-success {
         background-color: #28a745;
         border-color: #28a745;
@@ -161,12 +161,12 @@
         padding: 0.75rem 1rem;
         font-weight: 500;
     }
-    
+
     .btn-success:hover {
         background-color: #218838;
         border-color: #218838;
     }
-    
+
     .btn-outline-secondary {
         background-color: transparent;
         border-color: var(--border-color);
@@ -175,17 +175,17 @@
         padding: 0.75rem 1rem;
         font-weight: 500;
     }
-    
+
     .btn-outline-secondary:hover {
         background-color: var(--hover-bg);
         color: var(--text-color);
     }
-    
+
     .btn-sm {
         padding: 0.4rem 0.75rem;
         font-size: 0.875rem;
     }
-    
+
     /* Modal de Ejemplos (Aún Bootstrap) */
     .modal-content {
         background-color: var(--content-bg);
@@ -193,29 +193,29 @@
         color: var(--text-color);
         border-radius: 0.75rem;
     }
-    
+
     .modal-header {
         border-bottom-color: var(--border-color);
         padding: 1rem;
     }
-    
+
     .modal-title {
         color: var(--text-color);
     }
-    
+
     .modal-body {
         padding: 1.5rem;
     }
-    
+
     .btn-close {
         color: var(--text-color);
         opacity: 0.7;
     }
-    
+
     .btn-close:hover {
         opacity: 1;
     }
-    
+
     /* Lista de ejemplos */
     .list-group-item {
         background-color: var(--content-bg);
@@ -223,33 +223,33 @@
         color: var(--text-color);
         transition: all 0.2s;
     }
-    
+
     .list-group-item:hover {
         background-color: var(--hover-bg);
     }
-    
+
     .list-group-item.list-group-item-action:active {
         background-color: var(--hover-bg);
         color: var(--text-color);
     }
-    
+
     .list-group-item h6 {
         color: var(--text-color);
     }
-    
+
     .list-group-item small {
         color: var(--accent-color);
     }
-    
+
     .list-group-item p {
         color: var(--muted-text);
     }
-    
+
     /* Spinner */
     .spinner-border {
         color: var(--accent-color);
     }
-    
+
     /* Alert */
     .alert-danger {
         background-color: rgba(220, 53, 69, 0.15);
@@ -257,94 +257,133 @@
         color: #dc3545;
         border-radius: 0.5rem;
     }
-    
+
     .alert-success {
         background-color: rgba(40, 167, 69, 0.15);
         border-color: rgba(40, 167, 69, 0.3);
         color: #28a745;
         border-radius: 0.5rem;
     }
-    
+
     .alert-warning {
         background-color: rgba(255, 193, 7, 0.15);
         border-color: rgba(255, 193, 7, 0.3);
         color: #ffc107;
         border-radius: 0.5rem;
     }
-    
+
     /* Tarjeta de resultado */
     .card-header {
         padding: 1rem;
         background-color: var(--content-bg);
         border-bottom: 1px solid var(--border-color);
     }
-    
+
     .bg-success {
         background-color: #28a745 !important;
     }
-    
+
     hr {
         border-color: var(--border-color);
         margin: 1.5rem 0;
         opacity: 0.25;
     }
-    
+
     /* Utilidades */
     .mb-3 {
         margin-bottom: 1rem;
     }
-    
+
     .mb-4 {
         margin-bottom: 1.5rem;
     }
-    
+
     .me-1 {
         margin-right: 0.25rem;
     }
-    
+
     .me-2 {
         margin-right: 0.5rem;
     }
-    
+
     .d-flex {
         display: flex;
     }
-    
+
     .justify-content-between {
         justify-content: space-between;
     }
-    
+
     .text-muted {
         color: var(--muted-text) !important;
     }
-    
+
     .d-none {
         display: none;
     }
 
     /* --- Custom Loading Overlay --- */
     .loading-overlay {
-        position: fixed; /* Fixed position to cover the entire viewport */
+        position: fixed;
+        /* Fixed position to cover the entire viewport */
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
-        display: flex; /* Use flexbox to center content */
-        align-items: center; /* Center vertically */
-        justify-content: center; /* Center horizontally */
-        z-index: 1050; /* Ensure it's above other content, similar to Bootstrap's default modal z-index */
-        backdrop-filter: blur(2px); /* Optional: add a slight blur effect */
-        -webkit-backdrop-filter: blur(2px); /* For Safari support */
+        background-color: rgba(0, 0, 0, 0.6);
+        /* Semi-transparent black background */
+        display: flex;
+        /* Use flexbox to center content */
+        align-items: center;
+        /* Center vertically */
+        justify-content: center;
+        /* Center horizontally */
+        z-index: 1050;
+        /* Ensure it's above other content, similar to Bootstrap's default modal z-index */
+        backdrop-filter: blur(2px);
+        /* Optional: add a slight blur effect */
+        -webkit-backdrop-filter: blur(2px);
+        /* For Safari support */
     }
 
     .loading-content {
-        background-color: var(--content-bg); /* Use your existing content background */
-        padding: 2.5rem; /* More padding for a nicer look */
+        background-color: var(--content-bg);
+        /* Use your existing content background */
+        padding: 2.5rem;
+        /* More padding for a nicer look */
         border-radius: 0.75rem;
         text-align: center;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+        /* Add a subtle shadow */
     }
+
+    .form-control::placeholder {
+        color: #909090;
+        /* Color gris más claro para mejor contraste */
+        opacity: 0.8;
+    }
+
+    /* Estilos específicos para navegadores */
+    .form-control::-webkit-input-placeholder {
+        color: #909090;
+        opacity: 0.8;
+    }
+
+    .form-control::-moz-placeholder {
+        color: #909090;
+        opacity: 0.8;
+    }
+
+    .form-control:-ms-input-placeholder {
+        color: #909090;
+        opacity: 0.8;
+    }
+
+    .form-control::-ms-input-placeholder {
+        color: #909090;
+        opacity: 0.8;
+    }
+
     /* --- Fin Custom Loading Overlay --- */
 </style>
 {% endblock %}
@@ -378,14 +417,16 @@
                     <div class="step-label">Reporte</div>
                 </div>
             </div>
-            
+
             <div id="report-forms">
                 <div id="step1-form">
                     <div class="mb-3">
-                        <label for="natural-request" class="form-label">Describe el reporte que deseas (en lenguaje natural):</label>
-                        <textarea id="natural-request" class="form-control" rows="4" placeholder="Ejemplo: 'Reporte de ventas por campaña en los últimos 30 días agrupado por ASIN'"></textarea>
+                        <label for="natural-request" class="form-label">Describe el reporte que deseas (en lenguaje
+                            natural):</label>
+                        <textarea id="natural-request" class="form-control" rows="4"
+                            placeholder="Ejemplo: 'Reporte de ventas por campaña en los últimos 30 días agrupado por ASIN'"></textarea>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <div>
                             <button type="button" id="request-examples-btn" class="btn btn-outline-secondary btn-sm">
@@ -397,18 +438,18 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="step2-form" style="display: none;">
                     <div class="mb-3">
                         <label for="improved-prompt" class="form-label">Prompt Mejorado:</label>
                         <textarea id="improved-prompt" class="form-control code-editor" rows="3" readonly></textarea>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="sql-query" class="form-label">Consulta AMC-SQL:</label>
                         <textarea id="sql-query" class="form-control code-editor" rows="6"></textarea>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <button type="button" id="back-to-step1-btn" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Atrás
@@ -418,8 +459,14 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="step3-form" style="display: none;">
+                    <div class="mb-3">
+                        <label for="sql-display" class="form-label">Consulta AMC-SQL generada:</label>
+                        <pre id="sql-display" class="form-control code-editor"
+                            style="min-height: 120px; overflow-y: auto;"></pre>
+                    </div>
+
                     <div class="mb-3">
                         <label for="instance-id" class="form-label">Instance ID:</label>
                         <div class="input-group">
@@ -427,7 +474,7 @@
                             <input type="text" id="instance-id" class="form-control" value="amc088a9col">
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="confirm-sql" checked>
@@ -436,7 +483,7 @@
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <button type="button" id="back-to-step2-btn" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Atrás
@@ -457,13 +504,13 @@
             </div>
             <div class="card-body">
                 <div id="result-summary" class="mb-3">
-                    </div>
-                
+                </div>
+
                 <div id="download-links" class="mb-3">
-                    </div>
-                
+                </div>
+
                 <hr>
-                
+
                 <div class="d-flex justify-content-between">
                     <button type="button" id="new-report-btn" class="btn btn-outline-secondary">
                         <i class="bi bi-plus-circle me-2"></i>Nuevo Reporte
@@ -495,7 +542,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Ejemplos de Solicitudes</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="list-group">
@@ -511,14 +559,16 @@
                             <h6 class="mb-1">Rendimiento de ASIN por región</h6>
                             <small>Intermedio</small>
                         </div>
-                        <p class="mb-1">Reporte de rendimiento de los top 10 ASINs por región, mostrando clicks, impresiones y conversiones</p>
+                        <p class="mb-1">Reporte de rendimiento de los top 10 ASINs por región, mostrando clicks,
+                            impresiones y conversiones</p>
                     </a>
                     <a href="#" class="list-group-item list-group-item-action example-item">
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">Tendencias de rendimiento</h6>
                             <small>Avanzado</small>
                         </div>
-                        <p class="mb-1">Análisis de tendencias de conversiones por día de la semana agrupadas por categoría de producto en el trimestre actual</p>
+                        <p class="mb-1">Análisis de tendencias de conversiones por día de la semana agrupadas por
+                            categoría de producto en el trimestre actual</p>
                     </a>
                 </div>
             </div>
@@ -539,7 +589,7 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Elementos del DOM
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
@@ -547,47 +597,47 @@
         const step1Form = document.getElementById('step1-form');
         const step2Form = document.getElementById('step2-form');
         const step3Form = document.getElementById('step3-form');
-        
+
         const improvePromptBtn = document.getElementById('improve-prompt-btn');
         const generateSqlBtn = document.getElementById('generate-sql-btn');
         const createReportBtn = document.getElementById('create-report-btn');
         const backToStep1Btn = document.getElementById('back-to-step1-btn');
         const backToStep2Btn = document.getElementById('back-to-step2-btn');
-        
+
         const naturalRequestInput = document.getElementById('natural-request');
         const improvedPromptInput = document.getElementById('improved-prompt');
         const sqlQueryInput = document.getElementById('sql-query');
         const instanceIdInput = document.getElementById('instance-id');
-        
+
         const reportResult = document.getElementById('report-result');
         const reportError = document.getElementById('report-error');
         const errorMessage = document.getElementById('error-message');
         const resultSummary = document.getElementById('result-summary');
         const downloadLinks = document.getElementById('download-links');
-        
+
         const newReportBtn = document.getElementById('new-report-btn');
         const retryBtn = document.getElementById('retry-btn');
         const requestExamplesBtn = document.getElementById('request-examples-btn');
-        
+
         // --- Custom Loading Overlay ---
         const customLoadingOverlay = document.getElementById('customLoadingOverlay');
         // --- Fin Custom Loading Overlay ---
 
         // Modal de Ejemplos (sigue siendo de Bootstrap)
-        const examplesModal = new bootstrap.Modal(document.getElementById('examplesModal')); 
-        
+        const examplesModal = new bootstrap.Modal(document.getElementById('examplesModal'));
+
         // Función para cambiar entre pasos
         function goToStep(stepNum) {
             // Ocultar todos los formularios
             step1Form.style.display = 'none';
-            step2Form.style.display = 'none'; 
+            step2Form.style.display = 'none';
             step3Form.style.display = 'none';
-            
+
             // Resetear todas las clases de los pasos
             step1.className = 'step';
             step2.className = 'step';
             step3.className = 'step';
-            
+
             // Configurar el paso actual y anteriores
             if (stepNum === 1) {
                 step1Form.style.display = 'block';
@@ -603,67 +653,78 @@
                 step3.className = 'step active';
             }
         }
-        
+
         // Función para mostrar el modal de carga (CUSTOM)
         function showLoading(message, details) {
             document.getElementById('loading-message').textContent = message;
             document.getElementById('loading-details').textContent = details;
             customLoadingOverlay.classList.remove('d-none'); // Mostrar el overlay personalizado
         }
-        
+
         // Función para ocultar el modal de carga (CUSTOM)
         function hideLoading() {
             customLoadingOverlay.classList.add('d-none'); // Ocultar el overlay personalizado
         }
-        
+
         // Función para mostrar errores
         function showError(message) {
             errorMessage.textContent = message;
             reportResult.classList.add('d-none');
             reportError.classList.remove('d-none');
         }
-        
+
         // Función para mostrar resultados
         function showResult(data) {
             reportError.classList.add('d-none');
             reportResult.classList.remove('d-none');
-            
+
             resultSummary.innerHTML = `
-                <p style="color: var(--text-color);">Se ha generado su reporte satisfactoriamente.</p>
-                <p style="color: var(--muted-text);">Fecha/Hora: ${new Date().toLocaleString()}</p>
-            `;
-            
+        <p style="color: var(--text-color);">Se ha generado su reporte satisfactoriamente.</p>
+        <p style="color: var(--muted-text);">Fecha/Hora: ${new Date().toLocaleString()}</p>
+    `;
+
             downloadLinks.innerHTML = '';
-            
+
             if (data.downloadUrls && data.downloadUrls.length > 0) {
-                const linksHtml = data.downloadUrls.map((url, index) => `
-                    <a href="${url}" target="_blank" class="btn btn-outline-secondary mb-2">
-                        <i class="bi bi-download me-1"></i>Descargar Archivo ${index + 1}
-                    </a>
-                `).join(' ');
-                
+                // Crear nombre de archivo con formato amc_report_fechahora
+                const now = new Date();
+                const dateTimeStr = now.toISOString().replace(/[:.]/g, '-').replace('T', '_').substring(0, 19);
+                const fileName = `amc_report_${dateTimeStr}`;
+
+                const linksHtml = data.downloadUrls.map((url, index) => {
+                    // Extraer la extensión del archivo de la URL
+                    const fileExtension = url.split('.').pop().split('?')[0]; // Obtiene la extensión antes de parámetros de URL
+                    const downloadFileName = `${fileName}${index > 0 ? '_' + (index + 1) : ''}.${fileExtension}`;
+
+                    return `
+                <a href="${url}" download="${downloadFileName}" class="btn btn-outline-secondary mb-2">
+                    <i class="bi bi-download me-1"></i>Descargar ${fileExtension.toUpperCase()} (${downloadFileName})
+                </a>
+            `;
+                }).join(' ');
+
                 downloadLinks.innerHTML = `
-                    <h6 style="color: var(--text-color);">Enlaces de Descarga:</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        ${linksHtml}
-                    </div>
-                `;
+            <h6 style="color: var(--text-color);">Enlaces de Descarga:</h6>
+            <div class="d-flex flex-wrap gap-2">
+                ${linksHtml}
+            </div>
+        `;
             } else {
                 downloadLinks.innerHTML = '<div class="alert alert-warning">No hay enlaces de descarga disponibles para este reporte.</div>';
             }
         }
-        
+
         // Mejorar prompt (paso 1 -> 2)
         improvePromptBtn.addEventListener('click', async () => {
             const naturalRequest = naturalRequestInput.value.trim();
-            
+
             if (!naturalRequest) {
                 alert('Por favor describe el reporte que deseas');
                 return;
             }
-            
+
             showLoading('Mejorando su solicitud...', 'Estamos refinando su solicitud para obtener resultados óptimos');
-            
+
             console.log("Entro", naturalRequest);
 
             try {
@@ -695,18 +756,18 @@
                 console.log("Salio");
             }
         });
-        
+
         // Generar SQL (en paso 2)
-        generateSqlBtn.addEventListener('click', function() {
+        generateSqlBtn.addEventListener('click', function () {
             const improvedPrompt = improvedPromptInput.value.trim();
-            
+
             if (!improvedPrompt) {
                 alert('No hay un prompt mejorado disponible');
                 return;
             }
-            
+
             showLoading('Generando consulta SQL...', 'Convirtiendo su solicitud en una consulta AMC-SQL');
-            
+
             fetch('/reports/generate', {
                 method: 'POST',
                 headers: {
@@ -716,42 +777,45 @@
                     'improved_prompt': improvedPrompt
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.sql_query) {
-                    sqlQueryInput.value = data.sql_query;
-                    goToStep(3);
-                } else if (data.error) {
-                    alert(data.message || 'Error al generar SQL');
-                }
-            })
-            .catch(error => {
-                console.error('Error al generar SQL:', error); // Log the actual error
-                alert('Ocurrió un error de red o del servidor al generar SQL: ' + error.message);
-            })
-            .finally(() => {
-                hideLoading();
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sql_query) {
+                        sqlQueryInput.value = data.sql_query;
+                        // También actualizar la consulta SQL en el paso 3
+                        document.getElementById('sql-display').textContent = data.sql_query;
+                        goToStep(3);
+                    } else if (data.error) {
+                        alert(data.message || 'Error al generar SQL');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al generar SQL:', error);
+                    alert('Ocurrió un error de red o del servidor al generar SQL: ' + error.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
         });
-        
+
         // Generar reporte (paso 3)
-        createReportBtn.addEventListener('click', function() {
+        // Modificar el manejador de evento para createReportBtn
+        createReportBtn.addEventListener('click', function () {
             const sqlQuery = sqlQueryInput.value.trim();
             const instanceId = instanceIdInput.value.trim();
             const confirmSql = document.getElementById('confirm-sql').checked;
-            
+
             if (!sqlQuery || !instanceId) {
                 alert('Por favor complete todos los campos requeridos');
                 return;
             }
-            
+
             if (!confirmSql) {
                 alert('Por favor confirme que ha revisado la consulta SQL');
                 return;
             }
-            
+
             showLoading('Generando reporte...', 'Ejecutando consulta en Amazon Marketing Cloud. Esto puede tomar unos momentos.');
-            
+
             fetch('/reports/generate', {
                 method: 'POST',
                 headers: {
@@ -762,29 +826,55 @@
                     'instance_id': instanceId
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showError(data.message || 'Error al generar el reporte');
-                } else {
-                    showResult(data);
-                }
-            })
-            .catch(error => {
-                console.error('Error al crear el reporte:', error); // Log the actual error
-                showError('Ocurrió un error de red o del servidor al crear el reporte: ' + error.message);
-            })
-            .finally(() => {
-                hideLoading();
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showError(data.message || 'Error al generar el reporte');
+                    } else {
+                        // Guardar el reporte en la base de datos
+                        if (data.report_id) {
+                            // Si tenemos un report_id, guardar en la base de datos
+                            fetch('/reports/save', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: new URLSearchParams({
+                                    'report_id': data.report_id,
+                                    'sql_query': sqlQuery
+                                })
+                            })
+                                .then(saveResponse => saveResponse.json())
+                                .then(saveData => {
+                                    if (!saveData.success) {
+                                        console.warn('Reporte generado pero no se pudo guardar en la base de datos');
+                                    }
+                                    showResult(data);
+                                })
+                                .catch(error => {
+                                    console.error('Error al guardar reporte en BD:', error);
+                                    showResult(data); // Mostrar el resultado de todos modos
+                                });
+                        } else {
+                            showResult(data);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al crear el reporte:', error);
+                    showError('Ocurrió un error de red o del servidor al crear el reporte: ' + error.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
         });
-        
+
         // Navegación entre pasos
         backToStep1Btn.addEventListener('click', () => goToStep(1));
         backToStep2Btn.addEventListener('click', () => goToStep(2));
-        
+
         // Nuevo reporte
-        newReportBtn.addEventListener('click', function() {
+        newReportBtn.addEventListener('click', function () {
             naturalRequestInput.value = '';
             improvedPromptInput.value = '';
             sqlQueryInput.value = '';
@@ -792,21 +882,21 @@
             reportError.classList.add('d-none');
             goToStep(1);
         });
-        
+
         // Reintentar después de error
-        retryBtn.addEventListener('click', function() {
+        retryBtn.addEventListener('click', function () {
             reportError.classList.add('d-none');
             goToStep(3);
         });
-        
+
         // Mostrar ejemplos
-        requestExamplesBtn.addEventListener('click', function() {
+        requestExamplesBtn.addEventListener('click', function () {
             examplesModal.show();
         });
-        
+
         // Seleccionar ejemplo
         document.querySelectorAll('.example-item').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
                 e.preventDefault();
                 const exampleText = this.querySelector('p').textContent;
                 naturalRequestInput.value = exampleText;

@@ -152,14 +152,17 @@ class DeepSeekClient:
             'amc sql', 'consulta sql', 'query sql', 'reporte de', 'mostrar ventas', 'mostrar impresiones', 
             'mostrar clics', 'mostrar conversiones', 'dame un reporte', 'generar consulta', 'generar sql',
             'obtener datos de', 'métricas de', 'estadísticas de', 'conversion_event', 'traffic_event',
-            'por campaña', 'por asin', 'por región', 'total_product_sales', 'impressions', 'genera una consulta'
+            'por campaña', 'por asin', 'por región', 'total_product_sales', 'impressions', 'genera una consulta',
+            'quiero un reporte', 'necesito una consulta', 'crea un reporte', 'datos de ventas', 'datos de clics',
+            'datos de impresiones', 'reporte sql', 'análisis de', 'analizar', 'muestrame', 'muéstrame',
+            'consulta para ver', 'reporte para', 'ver datos de', 'compara', 'comparar'
         ]
-        
+
         for keyword in amc_keywords:
             if keyword in prompt_lower:
                 is_amc_query = True
                 break
-        
+
         if is_amc_query:
             logger.info("Detectada consulta relacionada con AMC SQL")
             try:
@@ -188,8 +191,9 @@ class DeepSeekClient:
                         logger.error("No se pudo generar una consulta SQL válida para AMC")
                         return "Lo siento, no pude generar una consulta SQL válida para Amazon Marketing Cloud con tu solicitud. Por favor, intenta reformular tu pregunta de manera más específica mencionando qué métricas (ventas, impresiones, clics) y dimensiones (ASIN, campaña, región) te interesan."
                 
-                # Verificar si el usuario solo quiere la consulta SQL
-                if any(term in prompt_lower for term in ['dame sql', 'genera sql', 'solo sql', 'únicamente sql', 'solamente sql', 'solo la consulta', 'quiero el sql', 'genera una consulta']):
+                # En la mayoría de los casos, queremos devolver solo la consulta SQL
+                # Ampliar los casos donde se devuelve solo SQL sin explicación
+                if not any(term in prompt_lower for term in ['explica', 'explícame', 'por qué', 'significado', 'enseñame', 'enseñar']):
                     # Devolver solo la consulta SQL formateada
                     answer = f"```sql\n{sql_query}\n```"
                     
@@ -476,28 +480,73 @@ class DeepSeekClient:
             "- 'Ventas por ASIN con diferencia máxima de 24 horas entre impresión y conversión': SELECT aet.tracked_asin, SUM(aet.total_product_sales) AS total_sales "
             "FROM amazon_attributed_events_by_traffic_time aet WHERE SECONDS_BETWEEN(aet.traffic_event_dt_utc, aet.conversion_event_dt_utc) <= 60 * 60 * 24 "
             "GROUP BY aet.tracked_asin;"
+            "**IMPORTANTE: Restricciones estrictas de tablas y columnas en AMC:**\n"
+            "1. Para consultas sobre impresiones, usa SOLO la tabla dsp_impressions y su columna impressions\n"
+            "2. Para consultas sobre clics, usa SOLO la tabla dsp_clicks y su columna clicks\n" 
+            "3. Para consultas sobre conversiones o ventas, usa SOLO las tablas conversions o conversions_with_relevance con sus columnas conversions y total_product_sales\n"
+            "4. Para eventos de video, usa SOLO la tabla dsp_video_events_feed con sus columnas específicas de video\n"
+            "5. NUNCA mezcles columnas de una tabla en otra tabla (ej: NO consultes impressions en conversions_with_relevance)\n"
+            "6. Si necesitas datos de múltiples tipos de eventos (impresiones, clics y conversiones), crea consultas separadas\n"
+            "7. Para cada métrica, escoge la tabla correcta: dsp_impressions para impresiones, dsp_clicks para clics, conversions_with_relevance para conversiones\n"
+            "8. RECUERDA: 'impressions' SOLO existe en dsp_impressions, 'clicks' SOLO existe en dsp_clicks, 'conversions' y 'total_product_sales' SOLO existen en conversions y conversions_with_relevance\n"
+            
+            "**Ejemplos CORRECTOS (cada métrica en su tabla correspondiente):**\n"
+            "- Impresiones por campaña: SELECT di.campaign, SUM(di.impressions) AS total_impressions FROM dsp_impressions di GROUP BY di.campaign;\n"
+            "- Clics por campaña: SELECT dc.campaign, SUM(dc.clicks) AS total_clicks FROM dsp_clicks dc GROUP BY dc.campaign;\n"
+            "- Conversiones por campaña: SELECT cwr.campaign, SUM(cwr.conversions) AS total_conversions, SUM(cwr.total_product_sales) AS total_sales FROM conversions_with_relevance cwr GROUP BY cwr.campaign;\n"
+            
+            "**Ejemplos INCORRECTOS (causan error):**\n"
+            "- ERROR: SELECT cwr.campaign, SUM(cwr.impressions) AS total_impressions FROM conversions_with_relevance cwr GROUP BY cwr.campaign; -- impressions NO existe en conversions_with_relevance\n"
+            "- ERROR: SELECT di.campaign, SUM(di.clicks) AS total_clicks FROM dsp_impressions di GROUP BY di.campaign; -- clicks NO existe en dsp_impressions\n"
+            
+            "Si la consulta pide múltiples métricas (impresiones, clics y conversiones) para una misma dimensión (ej. campaña), genera SOLO UNA consulta para la métrica principal solicitada. Explica en tu respuesta que cada métrica debe consultarse por separado.\n"
         )
+        
 
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "system", "content": f"Guía de AMC-SQL:\n{self.amc_sql_guide[:5000]}..."},
-            {"role": "user", "content": f"Genera una consulta AMC-SQL para: {natural_query}"}
-        ]
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": f"Guía de AMC-SQL:\n{self.amc_sql_guide[:5000]}..."},
+        {"role": "user", "content": f"Genera una consulta AMC-SQL para: {natural_query}. Asegúrate de que cada columna exista en la tabla que estás utilizando. Si necesito impresiones, usa dsp_impressions. Si necesito clics, usa dsp_clicks. Si necesito conversiones o ventas, usa conversions o conversions_with_relevance."}
+    ]
 
         for attempt in range(max_retries):
             try:
                 response = self.llm.invoke(messages)
                 sql_query = response.content if hasattr(response, "content") else str(response)
                 sql_query = re.sub(r'```sql\s*|\s*```|\n\s*\n', '', sql_query).strip()
-                if not self._is_valid_amc_sql(sql_query):
-                    logger.warning("Consulta generada no válida, intentando regenerar...")
+                
+                # Verificar si la consulta mezcla columnas de diferentes tablas incorrectamente
+                if self._has_invalid_column_usage(sql_query):
+                    logger.warning(f"Intento {attempt+1}: Consulta usa columnas incorrectas para la tabla seleccionada, regenerando...")
+                    
+                    # Añadir instrucción más específica para el próximo intento
+                    correction_prompt = (
+                        f"La consulta generada contiene un error: estás usando columnas que no existen en la tabla seleccionada.\n\n"
+                        f"Consulta errónea: {sql_query}\n\n"
+                        f"RECUERDA:\n"
+                        f"- La columna 'impressions' SOLO existe en la tabla dsp_impressions\n"
+                        f"- La columna 'clicks' SOLO existe en la tabla dsp_clicks\n"
+                        f"- Las columnas 'conversions' y 'total_product_sales' SOLO existen en conversions y conversions_with_relevance\n\n"
+                        f"Genera una nueva consulta AMC-SQL para: {natural_query}\n"
+                        f"Asegúrate de usar la tabla correcta para cada métrica."
+                    )
+                    messages.append({"role": "user", "content": correction_prompt})
                     continue
+                    
+                if not self._is_valid_amc_sql(sql_query):
+                    logger.warning(f"Intento {attempt+1}: Consulta generada no válida, regenerando...")
+                    continue
+                    
                 return sql_query
             except Exception as e:
                 logger.error(f"Error generando AMC-SQL: {str(e)}")
                 if attempt == max_retries - 1:
                     return f"Error al generar la consulta SQL: {str(e)}"
                 continue
+        
+        # Si llegamos aquí, todos los intentos fallaron
+        return "No pude generar una consulta SQL válida después de varios intentos. Por favor, reformula tu solicitud especificando claramente qué métricas necesitas (impresiones, clics o conversiones)."
+
 
     def _is_valid_amc_sql(self, sql_query: str) -> bool:
         """Verifica que la consulta SQL cumple con las restricciones de AMC."""
@@ -545,6 +594,25 @@ class DeepSeekClient:
             return False
             
         return True
+
+    def _has_invalid_column_usage(self, sql_query: str) -> bool:
+        """Verifica que no se mezclen columnas de diferentes tablas incorrectamente."""
+        sql_lower = sql_query.lower()
+        
+        # Verificar si se usa 'impressions' en una tabla que no sea dsp_impressions
+        if 'impressions' in sql_lower and 'dsp_impressions' not in sql_lower:
+            return True
+            
+        # Verificar si se usa 'clicks' en una tabla que no sea dsp_clicks
+        if 'clicks' in sql_lower and 'dsp_clicks' not in sql_lower:
+            return True
+            
+        # Verificar si se usan columnas de conversiones en tablas incorrectas
+        if ('conversions' in sql_lower or 'total_product_sales' in sql_lower) and \
+        not any(table in sql_lower for table in ['conversions', 'conversions_with_relevance']):
+            return True
+            
+        return False
 
     def _get_completion(self, prompt: str) -> str:
         """Obtiene una respuesta del modelo para el prompt dado."""

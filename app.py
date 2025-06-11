@@ -43,6 +43,33 @@ def chat():
         if not query:
             return jsonify({'error': 'No se proporcionó consulta'}), 400
         
+        # Detectar si el usuario está solicitando una consulta SQL o un reporte
+        query_lower = query.lower()
+        sql_request_keywords = [
+            'consulta sql', 'genera sql', 'crear sql', 'reporte', 'muestra las', 'mostrar', 
+            'dame un reporte', 'obtener datos', 'generar sql', 'dame una consulta', 
+            'necesito una consulta', 'sql para', 'amc-sql', 'sql de amc'
+        ]
+        
+        is_sql_request = any(keyword in query_lower for keyword in sql_request_keywords)
+        
+        # Si parece una solicitud de SQL, devolver solo la consulta SQL
+        if is_sql_request:
+            # Intentar generar SQL hasta 3 veces para asegurar calidad
+            for attempt in range(3):
+                sql_query = deepseek_client.generate_amc_sql(query)
+                
+                # Verificar si la respuesta parece un SQL válido
+                if sql_query and 'SELECT' in sql_query.upper() and 'FROM' in sql_query.upper():
+                    # Guardar en el historial la pregunta y la respuesta SQL
+                    deepseek_client.chat_history.add_message(query, sql_query)
+                    return jsonify({'response': sql_query})
+                
+                app.logger.warning(f"Intento {attempt+1} de generar SQL no válido: {sql_query}")
+            
+            # Si todos los intentos fallan, usar el método normal
+            app.logger.info("No se pudo generar SQL válido, respondiendo normalmente")
+        
         file_content = ""
         # Manejar archivo adjunto si existe
         if 'file' in request.files and request.files['file'].filename:
@@ -123,6 +150,7 @@ def view_report(file_id):
     if not report:
         return redirect(url_for('reports'))
     return render_template('reports/view.html', report=report, content=file_text)
+
 
 @app.route('/reports/generate', methods=['GET', 'POST'])
 def generate_report():
