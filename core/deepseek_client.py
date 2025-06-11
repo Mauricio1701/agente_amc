@@ -155,7 +155,10 @@ class DeepSeekClient:
             'por campaña', 'por asin', 'por región', 'total_product_sales', 'impressions', 'genera una consulta',
             'quiero un reporte', 'necesito una consulta', 'crea un reporte', 'datos de ventas', 'datos de clics',
             'datos de impresiones', 'reporte sql', 'análisis de', 'analizar', 'muestrame', 'muéstrame',
-            'consulta para ver', 'reporte para', 'ver datos de', 'compara', 'comparar'
+            'consulta para ver', 'reporte para', 'ver datos de', 'compara', 'comparar',
+            # AGREGAR ESTAS LÍNEAS:
+            'acos', 'tacos', 'rentabilidad', 'calcular por asin','calcula por asin', 'ventas por ads', 'gasto por ads',
+            'advertising cost of sale', 'total advertising cost of sale', 'roi publicitario'
         ]
 
         for keyword in amc_keywords:
@@ -193,7 +196,8 @@ class DeepSeekClient:
                 
                 # En la mayoría de los casos, queremos devolver solo la consulta SQL
                 # Ampliar los casos donde se devuelve solo SQL sin explicación
-                if not any(term in prompt_lower for term in ['explica', 'explícame', 'por qué', 'significado', 'enseñame', 'enseñar']):
+                if (not any(term in prompt_lower for term in ['explica', 'explícame', 'por qué', 'significado', 'enseñame', 'enseñar']) or
+                    any(term in prompt_lower for term in ['acos', 'tacos', 'calcular por asin', 'calcula por asin'])):
                     # Devolver solo la consulta SQL formateada
                     answer = f"```sql\n{sql_query}\n```"
                     
@@ -202,10 +206,10 @@ class DeepSeekClient:
                     self.conversation_context.append({"role": "assistant", "content": answer})
                     self.chat_history.add_message(prompt, answer)
                     return answer
-                
-                # Caso contrario: crear una respuesta explicativa concisa
+
+                # Solo en casos muy específicos donde pidan explicación explícita
                 system_context = (
-                    "Eres un experto en Amazon Marketing Cloud. El usuario ha solicitado una consulta SQL. "
+                    "Eres un experto en Amazon Marketing Cloud (AMC). El usuario ha solicitado una consulta SQL. "
                     "Proporciona una respuesta breve y directa que:"
                     "1. Incluya la consulta SQL formateada en un bloque de código"
                     "2. Añada solo una explicación muy breve de lo que hace la consulta"
@@ -480,7 +484,31 @@ class DeepSeekClient:
             "- 'Ventas por ASIN con diferencia máxima de 24 horas entre impresión y conversión': SELECT aet.tracked_asin, SUM(aet.total_product_sales) AS total_sales "
             "FROM amazon_attributed_events_by_traffic_time aet WHERE SECONDS_BETWEEN(aet.traffic_event_dt_utc, aet.conversion_event_dt_utc) <= 60 * 60 * 24 "
             "GROUP BY aet.tracked_asin;"
-            "**IMPORTANTE: Restricciones estrictas de tablas y columnas en AMC:**\n"
+            "**Para ACOS y TACOS (cálculos de rentabilidad publicitaria por ASIN):**\n"
+            "ACOS = Gasto en Publicidad ÷ Ventas atribuidas a publicidad\n"
+            "TACOS = Gasto en Publicidad ÷ Ventas totales\n"
+            "IMPORTANTE: Para ACOS/TACOS usa la tabla amazon_attributed_events_by_conversion_time que contiene tanto costos (click_cost) como ventas (total_product_sales):\n"
+            "- Ventas por ads: Identifica usando total_product_sales_clicks > 0 OR total_product_sales_views > 0\n"
+            "- Ventas totales: Usa total_product_sales directamente\n"
+            "- Gasto publicitario: Usa click_cost\n"
+            "**MANEJO DE NULOS Y CASOS ESPECIALES:**\n"
+            "- Usa COALESCE(click_cost, 0) para manejar valores NULL en gasto\n"
+            "- Usa COALESCE(total_product_sales, 0) para manejar valores NULL en ventas\n"
+            "- Usa CASE WHEN para evitar división por cero\n"
+            "**Ejemplo CORRECTO para ACOS/TACOS por ASIN:**\n"
+            "SELECT aet.tracked_asin, "
+            "SUM(CASE WHEN COALESCE(aet.total_product_sales_clicks, 0) > 0 OR COALESCE(aet.total_product_sales_views, 0) > 0 THEN COALESCE(aet.total_product_sales, 0) ELSE 0 END) AS ventas_por_ads, "
+            "SUM(COALESCE(aet.total_product_sales, 0)) AS ventas_totales, "
+            "SUM(COALESCE(aet.click_cost, 0)) AS gasto_por_ads, "
+            "CASE WHEN SUM(CASE WHEN COALESCE(aet.total_product_sales_clicks, 0) > 0 OR COALESCE(aet.total_product_sales_views, 0) > 0 THEN COALESCE(aet.total_product_sales, 0) ELSE 0 END) > 0 "
+            "THEN ROUND(SUM(COALESCE(aet.click_cost, 0)) / SUM(CASE WHEN COALESCE(aet.total_product_sales_clicks, 0) > 0 OR COALESCE(aet.total_product_sales_views, 0) > 0 THEN COALESCE(aet.total_product_sales, 0) ELSE 0 END), 4) ELSE 0 END AS acos, "
+            "CASE WHEN SUM(COALESCE(aet.total_product_sales, 0)) > 0 "
+            "THEN ROUND(SUM(COALESCE(aet.click_cost, 0)) / SUM(COALESCE(aet.total_product_sales, 0)), 4) ELSE 0 END AS tacos "
+            "FROM amazon_attributed_events_by_conversion_time aet "
+            "WHERE aet.tracked_asin IS NOT NULL AND aet.tracked_asin != '' "
+            "GROUP BY aet.tracked_asin "
+            "HAVING SUM(COALESCE(aet.total_product_sales, 0)) > 0;\n"
+            "**NUNCA intentes hacer JOIN entre conversions_with_relevance y sponsored_ads_traffic para ACOS/TACOS, ya que estas tablas no son compatibles.**\n""**IMPORTANTE: Restricciones estrictas de tablas y columnas en AMC:**\n"
             "1. Para consultas sobre impresiones, usa SOLO la tabla dsp_impressions y su columna impressions\n"
             "2. Para consultas sobre clics, usa SOLO la tabla dsp_clicks y su columna clicks\n" 
             "3. Para consultas sobre conversiones o ventas, usa SOLO las tablas conversions o conversions_with_relevance con sus columnas conversions y total_product_sales\n"
@@ -499,8 +527,17 @@ class DeepSeekClient:
             "- ERROR: SELECT cwr.campaign, SUM(cwr.impressions) AS total_impressions FROM conversions_with_relevance cwr GROUP BY cwr.campaign; -- impressions NO existe en conversions_with_relevance\n"
             "- ERROR: SELECT di.campaign, SUM(di.clicks) AS total_clicks FROM dsp_impressions di GROUP BY di.campaign; -- clicks NO existe en dsp_impressions\n"
             
-            "Si la consulta pide múltiples métricas (impresiones, clics y conversiones) para una misma dimensión (ej. campaña), genera SOLO UNA consulta para la métrica principal solicitada. Explica en tu respuesta que cada métrica debe consultarse por separado.\n"
-        )
+            "**REGLA IMPORTANTE: Respuesta única:**\n"
+            "- Siempre devuelve UNA SOLA consulta SQL, no múltiples consultas\n"
+            "- Si el usuario pide 'rendimiento por dispositivo' sin especificar métrica, usa conversiones y ventas como métrica principal\n"
+            "- NO incluyas explicaciones ni notas adicionales, solo la consulta SQL\n"
+            "- NO uses frases como 'Para X usa esta consulta, para Y usa esta otra'\n"
+            "- NO generes múltiples consultas separadas\n"
+            "**Ejemplo para 'rendimiento por dispositivo':**\n"
+            "SELECT aet.device_type, SUM(aet.total_product_sales) AS total_sales, SUM(aet.conversions) AS total_conversions "
+            "FROM amazon_attributed_events_by_conversion_time aet GROUP BY aet.device_type;\n"
+            "**IMPORTANTE: Solo devuelve la consulta SQL sin explicaciones adicionales.**\n"        
+            )
         
 
         messages = [
@@ -596,20 +633,30 @@ class DeepSeekClient:
         return True
 
     def _has_invalid_column_usage(self, sql_query: str) -> bool:
-        """Verifica que no se mezclen columnas de diferentes tablas incorrectamente."""
+        """Verifica que no se mezclen columnas de diferentes tablas incorrecvtamente."""
         sql_lower = sql_query.lower()
         
         # Verificar si se usa 'impressions' en una tabla que no sea dsp_impressions
-        if 'impressions' in sql_lower and 'dsp_impressions' not in sql_lower:
+        if 'impressions' in sql_lower and 'dsp_impressions' not in sql_lower and 'sponsored_ads_traffic' not in sql_lower:
             return True
             
-        # Verificar si se usa 'clicks' en una tabla que no sea dsp_clicks
-        if 'clicks' in sql_lower and 'dsp_clicks' not in sql_lower:
+        # Verificar si se usa 'clicks' en una tabla que no sea dsp_clicks  
+        if 'clicks' in sql_lower and 'dsp_clicks' not in sql_lower and 'amazon_attributed_events' not in sql_lower:
             return True
             
-        # Verificar si se usan columnas de conversiones en tablas incorrectas
+        # CORREGIR ESTA VALIDACIÓN - amazon_attributed_events también tiene total_product_sales
         if ('conversions' in sql_lower or 'total_product_sales' in sql_lower) and \
-        not any(table in sql_lower for table in ['conversions', 'conversions_with_relevance']):
+        not any(table in sql_lower for table in ['conversions', 'conversions_with_relevance', 'amazon_attributed_events']):
+            return True
+        
+        # Verificar JOINs problemáticos para ACOS/TACOS
+        if 'join' in sql_lower and 'sponsored_ads_traffic' in sql_lower and 'conversions_with_relevance' in sql_lower:
+            logger.warning("Intento de JOIN problemático entre conversions_with_relevance y sponsored_ads_traffic")
+            return True
+        
+        # Verificar si se intenta usar tracked_asin en sponsored_ads_traffic (pero no en amazon_attributed_events)
+        if 'sponsored_ads_traffic' in sql_lower and 'tracked_asin' in sql_lower:
+            logger.warning("tracked_asin no existe en sponsored_ads_traffic")
             return True
             
         return False

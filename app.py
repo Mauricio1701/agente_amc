@@ -76,10 +76,44 @@ def chat():
         # Detectar si el usuario está solicitando una consulta SQL o un reporte
         query_lower = query.lower()
         sql_request_keywords = [
-            'consulta sql', 'genera sql', 'crear sql', 'reporte', 'muestra las', 'mostrar', 
-            'dame un reporte', 'obtener datos', 'generar sql', 'dame una consulta', 
-            'necesito una consulta', 'sql para', 'amc-sql', 'sql de amc'
-        ]
+        'consulta sql', 'genera sql', 'crear sql', 'generar sql', 'dame una consulta', 
+        'necesito una consulta', 'sql para', 'amc-sql', 'sql de amc', 'amc sql', 'sql amc',
+        'consulta amc', 'consulta de amc', 'consulta amc-sql', 'amc sql query', 'amc-sql query',
+        
+        'reporte', 'muestra las', 'mostrar', 'dame un reporte', 'obtener datos', 'ver datos',
+        'dame datos', 'quiero datos', 'necesito datos', 'extraer datos', 'consultar datos',
+        
+        'calcula', 'calcular', 'calcules', 'calculemos', 'cálculo', 'cálculos',
+        'mide', 'medir', 'medición', 'métrica', 'métricas', 'estadística', 'estadísticas',
+        
+        'acos', 'tacos', 'advertising cost of sale', 'total advertising cost of sale',
+        'rentabilidad', 'roi publicitario', 'retorno de inversión', 'eficiencia publicitaria',
+        'costo publicitario', 'gasto publicitario', 'inversión publicitaria',
+        
+        'ventas por ads', 'ventas por anuncios', 'ventas atribuidas', 'ventas totales',
+        'gasto por ads', 'gasto en ads', 'costo por ads', 'inversión en ads',
+        'conversiones', 'conversion', 'ventas', 'sales', 'revenue',
+        
+        'por asin', 'por campaña', 'por campaign', 'por región', 'por dispositivo',
+        'por creative', 'por creativo', 'por fecha', 'por día', 'por mes',
+        'agrupado por', 'agrupada por', 'segmentado por', 'dividido por',
+        
+        'análisis', 'analizar', 'analiza', 'compara', 'comparar', 'comparación',
+        'rendimiento', 'performance', 'eficiencia', 'optimización',
+        
+        'muéstrame', 'muestrame', 'dame', 'obtén', 'extrae', 'genera',
+        'lista', 'listar', 'enumera', 'presenta', 'proporciona',
+        
+        'impresiones', 'impressions', 'clics', 'clicks', 'vistas', 'views',
+        'tráfico', 'traffic', 'audiencia', 'audience', 'segmentos', 'segments',
+        'atribución', 'attribution', 'eventos', 'events',
+        
+        'consulta para', 'reporte de', 'reporte para', 'datos de', 'información de',
+        'estadísticas de', 'métricas de', 'análisis de', 'rendimiento de',
+        
+        'quiero ver', 'necesito ver', 'quiero saber', 'necesito saber',
+        'quiero conocer', 'necesito conocer', 'quiero analizar', 'necesito analizar'
+    ]
         
         is_sql_request = any(keyword in query_lower for keyword in sql_request_keywords)
         

@@ -10,6 +10,11 @@
         overflow-y: auto;
         background-color: var(--secondary-bg);
         padding: 1.5rem;
+        /* AGREGAR ESTAS PROPIEDADES: */
+        max-height: 100vh;
+        /* Altura máxima de la ventana */
+        box-sizing: border-box;
+        /* Incluir padding en el cálculo de altura */
     }
 
     /* Estilos para el generador de reportes */
@@ -73,21 +78,125 @@
 
     .code-editor {
         font-family: 'Consolas', 'Courier New', monospace;
-        font-size: 0.9rem;
-        padding: 10px;
+        font-size: 0.85rem;
+        /* Reducido ligeramente para más contenido */
+        padding: 12px;
         background-color: var(--primary-bg);
         border: 1px solid var(--border-color);
         border-radius: 4px;
         color: var(--text-color);
+
+        /* Agregar estas propiedades para manejo de overflow */
+        overflow-x: auto;
+        /* Scroll horizontal cuando sea necesario */
+        overflow-y: auto;
+        /* Scroll vertical cuando sea necesario */
+        white-space: pre;
+        /* Preservar espacios y saltos de línea */
+        word-wrap: break-word;
+        /* Romper palabras largas */
+        max-width: 100%;
+        /* Asegurar que no exceda el contenedor */
+        resize: vertical;
+        /* Permitir redimensionar verticalmente */
+        min-height: 120px;
+        /* Altura mínima */
+        max-height: 400px;
+        /* Altura máxima para evitar que crezca demasiado */
     }
 
-    /* Card para el contenido principal */
-    .content-card {
-        background-color: var(--content-bg);
-        border-radius: 0.75rem;
+    /* Específico para el display de SQL en el paso 3 */
+
+    /* MEJORAR el manejo del textarea SQL: */
+    #sql-display {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.85rem;
+        padding: 12px;
+        background-color: var(--primary-bg);
         border: 1px solid var(--border-color);
-        overflow: hidden;
-        margin-bottom: 1.5rem;
+        border-radius: 4px;
+        color: var(--text-color);
+
+        /* AJUSTAR estas propiedades: */
+        overflow-x: auto;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-width: 100%;
+        min-height: 120px;
+        max-height: 300px;
+        /* REDUCIR la altura máxima */
+        line-height: 1.4;
+        resize: vertical;
+        /* Permitir redimensionar manualmente */
+    }
+
+    /* AGREGAR estilo específico para el paso 3: */
+    #step3-form {
+        max-height: none;
+        /* Permitir que crezca según el contenido */
+        overflow: visible;
+    }
+
+    /* MEJORAR la sección de botones para que sea visible: */
+    #step3-form .d-flex.justify-content-between {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        position: sticky;
+        bottom: 0;
+        background-color: var(--content-bg);
+        z-index: 10;
+    }
+
+    /* Asegurar que el contenedor padre no permita overflow */
+    .content-card {
+        overflow: visible;
+        /* CAMBIAR de hidden a visible */
+        margin-bottom: 2rem;
+        /* Espacio adicional al final */
+    }
+
+    .card-body {
+        overflow-x: auto;
+        /* Solo scroll horizontal cuando sea necesario */
+        overflow-y: visible;
+        /* Permitir que el contenido se expanda verticalmente */
+        padding: 1.5rem;
+    }
+
+    /* Responsive: En pantallas pequeñas, ajustar el font-size */
+    @media (max-width: 768px) {
+
+        .code-editor,
+        #sql-display {
+            font-size: 0.75rem;
+            padding: 8px;
+        }
+    }
+
+    /* Estilos para la barra de scroll personalizada (opcional) */
+    .code-editor::-webkit-scrollbar,
+    #sql-display::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .code-editor::-webkit-scrollbar-track,
+    #sql-display::-webkit-scrollbar-track {
+        background: var(--secondary-bg);
+        border-radius: 4px;
+    }
+
+    .code-editor::-webkit-scrollbar-thumb,
+    #sql-display::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+
+    .code-editor::-webkit-scrollbar-thumb:hover,
+    #sql-display::-webkit-scrollbar-thumb:hover {
+        background: var(--muted-text);
     }
 
     .card-body {
@@ -461,10 +570,21 @@
                 </div>
 
                 <div id="step3-form" style="display: none;">
+
+                    <!-- Busca esta sección en step3-form (línea 545-555): -->
+
                     <div class="mb-3">
                         <label for="sql-display" class="form-label">Consulta AMC-SQL generada:</label>
-                        <pre id="sql-display" class="form-control code-editor"
-                            style="min-height: 120px; overflow-y: auto;"></pre>
+
+
+
+                        <div class="position-relative">
+                            <textarea id="sql-display" class="form-control code-editor" rows="8"></textarea>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Puede editar la consulta SQL directamente. Use scroll si es muy larga.
+                            </small>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -800,8 +920,8 @@
                 .then(data => {
                     if (data.sql_query) {
                         sqlQueryInput.value = data.sql_query;
-                        // También actualizar la consulta SQL en el paso 3
-                        document.getElementById('sql-display').textContent = data.sql_query;
+                        // ACTUALIZAR ESTA LÍNEA para usar .value en lugar de .textContent:
+                        document.getElementById('sql-display').value = data.sql_query;
                         goToStep(3);
                     } else if (data.error) {
                         alert(data.message || 'Error al generar SQL');
@@ -816,15 +936,19 @@
                 });
         });
 
-        // Generar reporte (paso 3)
-        // Modificar el manejador de evento para createReportBtn
         createReportBtn.addEventListener('click', function () {
-            const sqlQuery = sqlQueryInput.value.trim();
+            // CAMBIAR ESTA LÍNEA para obtener el SQL del textarea editable:
+            const sqlQuery = document.getElementById('sql-display').value.trim();
             const instanceId = instanceIdInput.value.trim();
             const confirmSql = document.getElementById('confirm-sql').checked;
 
             if (!sqlQuery || !instanceId) {
                 alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            if (!confirmSql) {
+                alert('Por favor confirme que ha revisado la consulta SQL');
                 return;
             }
 
@@ -850,33 +974,7 @@
                     if (data.error) {
                         showError(data.message || 'Error al generar el reporte');
                     } else {
-                        // Guardar el reporte en la base de datos
-                        if (data.report_id) {
-                            // Si tenemos un report_id, guardar en la base de datos
-                            fetch('/reports/save', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: new URLSearchParams({
-                                    'report_id': data.report_id,
-                                    'sql_query': sqlQuery
-                                })
-                            })
-                                .then(saveResponse => saveResponse.json())
-                                .then(saveData => {
-                                    if (!saveData.success) {
-                                        console.warn('Reporte generado pero no se pudo guardar en la base de datos');
-                                    }
-                                    showResult(data);
-                                })
-                                .catch(error => {
-                                    console.error('Error al guardar reporte en BD:', error);
-                                    showResult(data); // Mostrar el resultado de todos modos
-                                });
-                        } else {
-                            showResult(data);
-                        }
+                        showResult(data);
                     }
                 })
                 .catch(error => {
@@ -922,6 +1020,50 @@
                 examplesModal.hide();
             });
         });
+
+        document.getElementById('sql-query').addEventListener('input', function () {
+            document.getElementById('sql-display').value = this.value;
+        });
+
+        document.getElementById('sql-display').addEventListener('input', function () {
+            document.getElementById('sql-query').value = this.value;
+        });
+
+        function adjustContainerHeight() {
+            const contentContainer = document.querySelector('.content-container');
+            const windowHeight = window.innerHeight;
+            const headerHeight = 60; // Altura aproximada del header
+            const padding = 48; // 1.5rem * 2 (top + bottom padding)
+
+            contentContainer.style.maxHeight = (windowHeight - headerHeight - padding) + 'px';
+        }
+
+        // Ajustar altura al cargar y redimensionar
+        adjustContainerHeight();
+        window.addEventListener('resize', adjustContainerHeight);
+
+        // Hacer scroll hacia los botones cuando se muestra el paso 3
+        const originalGoToStep = goToStep; // goToStep aún no está definido aquí
+        goToStep = function (stepNum) {
+            originalGoToStep(stepNum);
+
+            if (stepNum === 3) {
+                // Pequeño delay para asegurar que el contenido se ha renderizado
+                setTimeout(() => {
+                    const step3Form = document.getElementById('step3-form');
+                    const buttons = step3Form.querySelector('.d-flex.justify-content-between');
+                    if (buttons) {
+                        buttons.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'end'
+                        });
+                    }
+                }, 100);
+            }
+        };
+
     });
+
+
 </script>
 {% endblock %}
